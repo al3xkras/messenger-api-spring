@@ -58,12 +58,12 @@ public class MessengerUserController {
                 .phoneNumber(messengerUserDTO.getPhoneNumber())
                 .messengerUserType(messengerUserDTO.getMessengerUserType())
                 .build();
-        if (messengerUserId==null & username==null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
-        } else if (messengerUserId!=null){
-            return messengerUserService.updateUserById(messengerUserId,messengerUser);
+        if (messengerUserId!=null) {
+            return messengerUserService.updateUserById(messengerUser);
+        } else if (username!=null) {
+            return messengerUserService.updateUserByUsername(messengerUser);
         }
-        return messengerUserService.updateUserByUsername(username,messengerUser);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
     }
 
     @DeleteMapping

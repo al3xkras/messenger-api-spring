@@ -8,6 +8,4 @@ public interface ChatUserRepository extends JpaRepository<ChatUser, ChatUserId> 
 
     ChatUser update(ChatUser chatUser);
 
-    void deleteByUserIdAndChatId(Long userId, Long chatId);
-
 }

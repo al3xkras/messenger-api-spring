@@ -18,6 +18,7 @@ import java.util.Objects;
 @Table(name = "messenger_user")
 public class MessengerUser {
     @Id
+    @Column(name = "messenger_user_id", nullable = false)
     public Long messengerUserId;
 
     public String username;

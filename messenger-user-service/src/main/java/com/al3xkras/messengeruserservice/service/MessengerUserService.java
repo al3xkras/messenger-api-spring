@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MessengerUserService {
@@ -20,19 +21,44 @@ public class MessengerUserService {
     }
 
     public MessengerUser findMessengerUserByUsername(String username) {
-        return messengerUserRepository.findByUsername(username);
+        return messengerUserRepository.findByUsername(username)
+                .orElseThrow(MessengerUserNotFoundException::new);
     }
 
     public MessengerUser saveUser(MessengerUser messengerUser) {
         return messengerUserRepository.save(messengerUser);
     }
 
-    public MessengerUser updateUserById(Long messengerUserId, MessengerUser messengerUser) {
-        return messengerUserRepository.updateById(messengerUserId,messengerUser);
+    @Transactional
+    public MessengerUser updateUserById(MessengerUser messengerUser) {
+        MessengerUser beforeUpdate = messengerUserRepository.findById(messengerUser.getMessengerUserId())
+                .orElseThrow(MessengerUserNotFoundException::new);
+        MessengerUser updated = MessengerUser.builder()
+                .messengerUserId(messengerUser.getMessengerUserId())
+                .username(messengerUser.getUsername()==null?beforeUpdate.getUsername():messengerUser.getUsername())
+                .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
+                .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
+                .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
+                .phoneNumber(messengerUser.getPhoneNumber()==null?beforeUpdate.getPhoneNumber():messengerUser.getPhoneNumber())
+                .messengerUserType(messengerUser.getMessengerUserType()==null?beforeUpdate.getMessengerUserType():messengerUser.getMessengerUserType())
+                .build();
+        return messengerUserRepository.save(updated);
     }
 
-    public MessengerUser updateUserByUsername(String username, MessengerUser messengerUser) {
-        return messengerUserRepository.updateByUsername(username,messengerUser);
+    @Transactional
+    public MessengerUser updateUserByUsername(MessengerUser messengerUser) {
+        MessengerUser beforeUpdate = messengerUserRepository.findById(messengerUser.getMessengerUserId())
+                .orElseThrow(MessengerUserNotFoundException::new);
+        MessengerUser updated = MessengerUser.builder()
+                .messengerUserId(messengerUser.getMessengerUserId()==null?beforeUpdate.getMessengerUserId():messengerUser.getMessengerUserId())
+                .username(messengerUser.getUsername())
+                .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
+                .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
+                .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
+                .phoneNumber(messengerUser.getPhoneNumber()==null?beforeUpdate.getPhoneNumber():messengerUser.getPhoneNumber())
+                .messengerUserType(messengerUser.getMessengerUserType()==null?beforeUpdate.getMessengerUserType():messengerUser.getMessengerUserType())
+                .build();
+        return messengerUserRepository.save(updated);
     }
 
     public Page<MessengerUser> findAllUsersByChatId(Long chatId, Pageable pageable) {

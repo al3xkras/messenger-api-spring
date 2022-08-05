@@ -14,12 +14,14 @@ import java.util.Objects;
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Chat {
 
     @Id
     @Column(name = "chat_id")
     private Long chatId;
+    @Column(name = "chat_name")
     private String chatName;
     private String chatDisplayName;
 

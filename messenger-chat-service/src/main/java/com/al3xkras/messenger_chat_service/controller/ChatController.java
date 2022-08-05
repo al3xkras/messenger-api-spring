@@ -42,7 +42,8 @@ public class ChatController {
                 .chatName(chatDTO.getChatName())
                 .chatDisplayName(chatDTO.getDisplayName())
                 .build();
-        return chatService.createChat(chat);
+
+        return chatService.createNewChat(chat, null);
     }
 
     @GetMapping("chat")

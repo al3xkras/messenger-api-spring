@@ -2,6 +2,7 @@ package com.al3xkras.messenger_chat_service.service;
 
 import com.al3xkras.messenger_chat_service.entity.Chat;
 import com.al3xkras.messenger_chat_service.entity.ChatUser;
+import com.al3xkras.messenger_chat_service.entity.MessengerUser;
 import com.al3xkras.messenger_chat_service.exception.ChatNameAlreadyExistsException;
 import com.al3xkras.messenger_chat_service.exception.ChatNotFoundException;
 import com.al3xkras.messenger_chat_service.exception.ChatUserNotFoundException;
@@ -31,7 +32,7 @@ public class ChatService {
         return chatRepository.findAllByUsername(username,pageable);
     }
 
-    public Chat createChat(Chat chat) {
+    public Chat createNewChat(Chat chat, MessengerUser creator) {
         //TODO add first user to the chat
         return chatRepository.save(chat);
     }
@@ -60,10 +61,6 @@ public class ChatService {
     }
 
     public void deleteChatUser(ChatUser chatUser) throws ChatUserNotFoundException{
-        if (chatUser.getChatUserId()!=null){
-            chatUserRepository.delete(chatUser);
-            return;
-        }
-        chatUserRepository.deleteByUserIdAndChatId(chatUser.getUserId(),chatUser.getChatId());
+        chatUserRepository.delete(chatUser);
     }
 }
