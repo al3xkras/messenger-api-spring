@@ -1,13 +1,17 @@
 package com.al3xkras.messengeruserservice.service;
 
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
+import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
+import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.SQLIntegrityConstraintViolationException;
 
 @Service
 public class MessengerUserService {
@@ -25,8 +29,17 @@ public class MessengerUserService {
                 .orElseThrow(MessengerUserNotFoundException::new);
     }
 
+    @Transactional
     public MessengerUser saveUser(MessengerUser messengerUser) {
-        return messengerUserRepository.save(messengerUser);
+        try {
+            messengerUserRepository.insert(messengerUser);
+        } catch (HibernateException e){
+            if (e.getCause() instanceof SQLIntegrityConstraintViolationException)
+                throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
+            throw e;
+        }
+        return messengerUserRepository.findByUsername(messengerUser.getUsername())
+                .orElseThrow(()->new MessengerUserAlreadyExistsException(messengerUser.getUsername()));
     }
 
     @Transactional
