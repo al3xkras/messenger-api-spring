@@ -1,5 +1,6 @@
 package com.al3xkras.messengermessageservice.entity;
 
+
 import com.al3xkras.messengermessageservice.model.ChatMessageId;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.util.Date;
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "message")

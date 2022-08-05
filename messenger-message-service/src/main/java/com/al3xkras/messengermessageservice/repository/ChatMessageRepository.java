@@ -17,5 +17,4 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, ChatMe
             "(select chat.chatId from Chat chat where chat.chatName=?1)")
     Page<ChatMessage> findAllByChatName(String chatName, Pageable pageable);
 
-    ChatMessage update(ChatMessage chatMessage);
 }

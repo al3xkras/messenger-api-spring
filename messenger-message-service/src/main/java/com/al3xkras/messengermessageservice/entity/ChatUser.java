@@ -6,35 +6,36 @@ import lombok.*;
 
 import javax.persistence.*;
 
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode
 @Entity
 @Table(name = "chat_user",
         uniqueConstraints = @UniqueConstraint(name = "chat_user_un",
                 columnNames = {"chat_id", "user_id"})
 )
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-@Builder
 @IdClass(ChatUserId.class)
-@EqualsAndHashCode
 public class ChatUser {
     @Id
-    @JoinColumn(name = "chat_id",
-            referencedColumnName = "chat_id",
-            table = "chat",nullable = false)
+    @Column(name = "chat_id",nullable = false)
     private Long chatId;
     @Id
-    @JoinColumn(name = "user_id",
-            referencedColumnName = "messenger_user_id",
-            table = "messenger_user",nullable = false)
+    @Column(name = "user_id",nullable = false)
     private Long userId;
+
     private String title;
     private ChatUserRole chatUserRole;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "chat_id", insertable = false, updatable = false)
+    @JoinColumn(name = "chat_id",
+            referencedColumnName = "chat_id", insertable = false, updatable = false)
     @ToString.Exclude
     private Chat chat;
+
 
 }
