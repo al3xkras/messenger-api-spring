@@ -12,8 +12,7 @@
     <modules>
         <module>messenger-user-service</module>
         <module>messenger-chat-service</module>
-        <module>messenger-chat-user-service</module>
-        <module>messenger-message-service</module>
+        <module>messenger-chatMessage-service</module>
     </modules>
 
     <properties>
