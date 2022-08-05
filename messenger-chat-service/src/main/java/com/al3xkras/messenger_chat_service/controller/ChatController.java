@@ -25,8 +25,8 @@ public class ChatController {
 
     @GetMapping("/chats")
     public Page<Chat> getChatsByUserId(@RequestParam(value = "user-id", required = false) Long messengerUserId,
-                               @RequestParam(value = "username", required = false) String username,
-                               @RequestBody PageRequestDto pageRequestDto){
+                                       @RequestParam(value = "username", required = false) String username,
+                                       @RequestBody PageRequestDto pageRequestDto){
         Pageable pageable = PageRequest.of(pageRequestDto.getPage(),pageRequestDto.getSize());
         if (messengerUserId!=null){
             return chatService.findAllByMessengerUserId(messengerUserId, pageable);

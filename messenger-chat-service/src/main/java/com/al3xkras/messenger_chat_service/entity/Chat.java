@@ -3,25 +3,26 @@ package com.al3xkras.messenger_chat_service.entity;
 import lombok.*;
 import org.hibernate.Hibernate;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.util.Objects;
 
-@Entity
-@Table(name = "chat", uniqueConstraints =
-    @UniqueConstraint(name = "chat_name_un",columnNames = "chat_name")
-)
+
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "chat", uniqueConstraints =
+@UniqueConstraint(name = "chat_name_un",columnNames = "chat_name")
+)
 public class Chat {
 
     @Id
+    @Column(name = "chat_id")
     private Long chatId;
+    @Column(name = "chat_name")
     private String chatName;
     private String chatDisplayName;
 
