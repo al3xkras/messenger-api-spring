@@ -1,0 +1,4 @@
+server:
+  port: 10002
+spring:
+  mandatory-file-encoding: UTF-8
