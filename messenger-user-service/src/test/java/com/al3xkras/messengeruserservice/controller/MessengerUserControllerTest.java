@@ -5,6 +5,7 @@ import com.al3xkras.messengeruserservice.entity.MessengerUser;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import com.al3xkras.messengeruserservice.service.MessengerUserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,33 @@ class MessengerUserControllerTest {
             .phoneNumber("111-22-33")
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
+
     String firstUserJSON = "{\"messengerUserId\":1,\"username\":\"user1\",\"name\":\"Max\",\"surname\":null,\"emailAddress\":\"max@gmail.com\",\"phoneNumber\":\"111-22-33\",\"messengerUserType\":\"ADMIN\"}";
+
+    MessengerUserDTO updatedFirstUserDTO = MessengerUserDTO.builder()
+            .username("user1")
+            .email("maxim@gmail.com")
+            .phoneNumber("111-22-33")
+            .messengerUserType(MessengerUserType.ADMIN)
+            .build();
+    MessengerUser firstUserUpdate = MessengerUser.builder()
+            .messengerUserId(1L)
+            .username(updatedFirstUserDTO.getUsername())
+            .name(updatedFirstUserDTO.getName())
+            .surname(updatedFirstUserDTO.getSurname())
+            .emailAddress(updatedFirstUserDTO.getEmail())
+            .phoneNumber(updatedFirstUserDTO.getPhoneNumber())
+            .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
+            .build();
+    MessengerUser firstUserAfterUpdate = MessengerUser.builder()
+            .messengerUserId(1L)
+            .username(updatedFirstUserDTO.getUsername())
+            .name(firstUser.getName())
+            .surname(updatedFirstUserDTO.getSurname())
+            .emailAddress(updatedFirstUserDTO.getEmail())
+            .phoneNumber(updatedFirstUserDTO.getPhoneNumber())
+            .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -125,9 +152,107 @@ class MessengerUserControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/user")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\":\"user3\",\"password\":\"password123\",\"name\":\"Michael\",\"surname\":\"Jackson\",\"email\":null,\"phoneNumber\":\"123-45-67\",\"messengerUserType\":\"USER\"}"))
+                .content(objectMapper.writeValueAsString(pojo)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(userAfterSave)));
+    }
+
+    @Test
+    void whenUpdateUserThatExistsById_thenReturnUpdatedUser() throws Exception {
+        Mockito.when(messengerUserService.updateUserById(firstUserUpdate))
+                .thenReturn(firstUserAfterUpdate);
+        Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdate))
+                .thenThrow(RuntimeException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
+                .param("user-id","1"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(firstUserAfterUpdate)));
+    }
+
+    @Test
+    void whenUpdateUserThatExists_andBothIdAndUsernameAreSpecified_thenUpdateUserById() throws Exception {
+        Mockito.when(messengerUserService.updateUserById(firstUserUpdate))
+                .thenReturn(firstUserAfterUpdate);
+        Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdate))
+                .thenThrow(RuntimeException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
+                        .param("user-id","1")
+                        .param("username","anonymouse"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(firstUserAfterUpdate)));
+    }
+
+    @Test
+    void whenUpdateUserThatExistsByUsername_thenReturnUpdatedUser() throws Exception{
+
+        MessengerUser firstUserUpdateByUsername = MessengerUser.builder()
+                .username("user1")
+                .name(updatedFirstUserDTO.getName())
+                .surname(updatedFirstUserDTO.getSurname())
+                .emailAddress(updatedFirstUserDTO.getEmail())
+                .phoneNumber(updatedFirstUserDTO.getPhoneNumber())
+                .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
+                .build();
+
+        Mockito.when(messengerUserService.updateUserById(firstUserUpdateByUsername))
+                .thenThrow(RuntimeException.class);
+        Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdateByUsername))
+                .thenReturn(firstUserAfterUpdate);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
+                        .param("username","user1"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(firstUserAfterUpdate)));
+    }
+
+    @Test
+    void whenUpdateUser_andNoIdOrUsernameIsSpecified_thenReturnHttpStatusBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedFirstUserDTO)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().string("please specify \"username\" or \"user-id\""));
+    }
+
+    @Test
+    void whenUpdateUserThatDoesNotExist_thenReturnHttpStatusNotFound() throws Exception{
+
+        MessengerUser firstUserUpdateByUsername = MessengerUser.builder()
+                .username("user1")
+                .name(updatedFirstUserDTO.getName())
+                .surname(updatedFirstUserDTO.getSurname())
+                .emailAddress(updatedFirstUserDTO.getEmail())
+                .phoneNumber(updatedFirstUserDTO.getPhoneNumber())
+                .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
+                .build();
+
+        Mockito.when(messengerUserService.updateUserById(firstUserUpdate))
+                .thenThrow(MessengerUserNotFoundException.class);
+        Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdateByUsername))
+                .thenThrow(MessengerUserNotFoundException.class);
+
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
+                        .param("user-id","1"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
+                        .param("username","user1"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string("user not found"));
 
     }
 }

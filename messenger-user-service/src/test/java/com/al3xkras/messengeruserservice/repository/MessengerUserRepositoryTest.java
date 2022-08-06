@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -19,6 +20,9 @@ import java.util.Optional;
 @AutoConfigureTestEntityManager
 @Slf4j
 class MessengerUserRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Autowired
     private MessengerUserRepository messengerUserRepository;
@@ -63,9 +67,6 @@ class MessengerUserRepositoryTest {
             .phoneNumber("111-45376-73")
             .messengerUserType(MessengerUserType.USER)
             .build();
-
-    static MessengerUser userWithExistingUsername = MessengerUser.builder()
-            .username("user1").build();
 
 
     @BeforeEach

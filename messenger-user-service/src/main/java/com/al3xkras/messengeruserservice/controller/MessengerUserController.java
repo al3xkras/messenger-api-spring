@@ -32,7 +32,7 @@ public class MessengerUserController {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e){
-        return ResponseEntity.status(e.getStatus()).body(e.getMessage());
+        return ResponseEntity.status(e.getStatus()).body(e.getReason());
     }
 
     @GetMapping("{id}")
@@ -63,7 +63,7 @@ public class MessengerUserController {
     @PutMapping
     public MessengerUser editUserData(@RequestParam(value = "user-id", required = false) Long messengerUserId,
                                       @RequestParam(value = "username", required = false) String username,
-                                      MessengerUserDTO messengerUserDTO){
+                                      @RequestBody MessengerUserDTO messengerUserDTO){
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDTO.getUsername())
                 .name(messengerUserDTO.getName())
@@ -73,8 +73,10 @@ public class MessengerUserController {
                 .messengerUserType(messengerUserDTO.getMessengerUserType())
                 .build();
         if (messengerUserId!=null) {
+            messengerUser.setMessengerUserId(messengerUserId);
             return messengerUserService.updateUserById(messengerUser);
         } else if (username!=null) {
+            messengerUser.setUsername(username);
             return messengerUserService.updateUserByUsername(messengerUser);
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
