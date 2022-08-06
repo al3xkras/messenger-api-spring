@@ -1,18 +1,20 @@
 package com.al3xkras.messengeruserservice.service;
 
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
+import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
+import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
 
 
@@ -50,14 +52,14 @@ class MessengerUserServiceTest {
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
 
-    MessengerUser userToSave = MessengerUser.builder()
+    static MessengerUser userToSave = MessengerUser.builder()
             .username("user3")
             .name("Jake")
             .emailAddress("jak3@gmail.com")
             .phoneNumber("111-45376-73")
             .messengerUserType(MessengerUserType.USER)
             .build();
-    MessengerUser userToSaveWithId = MessengerUser.builder()
+    static MessengerUser userToSaveWithId = MessengerUser.builder()
             .messengerUserId(3L)
             .username("user3")
             .name("Jake")
@@ -65,6 +67,9 @@ class MessengerUserServiceTest {
             .phoneNumber("111-45376-73")
             .messengerUserType(MessengerUserType.USER)
             .build();
+
+    static MessengerUser userWithExistingUsername = MessengerUser.builder()
+            .username("user1").build();
 
     @BeforeEach
     void beforeEach(){
@@ -99,6 +104,9 @@ class MessengerUserServiceTest {
                     return userToSaveWithId;
                 });
 
+        HibernateException sqlIntegrity = new HibernateException(new SQLIntegrityConstraintViolationException());
+        Mockito.when(messengerUserRepository.save(userWithExistingUsername))
+                .thenThrow(sqlIntegrity);
     }
 
     @Test
@@ -167,12 +175,9 @@ class MessengerUserServiceTest {
 
     @Test
     void whenSaveExistingUser_thenExpectException(){
-        MessengerUser userWithExistingId = MessengerUser.builder()
-                .messengerUserId(1L).username("a").build();
-
-        MessengerUser userWithExistingUsername = MessengerUser.builder()
-                .messengerUserId(123L).username("user1").build();
-
+        Assertions.assertThrows(MessengerUserAlreadyExistsException.class,()->{
+           messengerUserService.saveUser(userWithExistingUsername);
+        });
     }
 
 }

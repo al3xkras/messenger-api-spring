@@ -1,12 +1,14 @@
 package com.al3xkras.messengeruserservice.dto;
 
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
+@Builder
 public class MessengerUserDTO {
 
     @NotNull

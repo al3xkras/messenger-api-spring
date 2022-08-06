@@ -6,6 +6,7 @@ import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundExceptio
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,8 +32,9 @@ public class MessengerUserService {
 
     @Transactional
     public MessengerUser saveUser(MessengerUser messengerUser) {
+        messengerUser.setMessengerUserId(null);
         try {
-            messengerUserRepository.insert(messengerUser);
+            messengerUserRepository.save(messengerUser);
         } catch (HibernateException e){
             if (e.getCause() instanceof SQLIntegrityConstraintViolationException)
                 throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
@@ -79,10 +81,17 @@ public class MessengerUserService {
     }
 
     public void deleteById(Long messengerUserId) throws MessengerUserNotFoundException{
-        messengerUserRepository.deleteById(messengerUserId);
+        try {
+            messengerUserRepository.deleteById(messengerUserId);
+        } catch (EmptyResultDataAccessException e){
+            throw new MessengerUserNotFoundException();
+        }
     }
 
+    @Transactional
     public void deleteByUsername(String username) throws MessengerUserNotFoundException {
-        messengerUserRepository.deleteByUsername(username);
+        MessengerUser existing = messengerUserRepository.findByUsername(username)
+                        .orElseThrow(MessengerUserNotFoundException::new);
+        messengerUserRepository.deleteById(existing.getMessengerUserId());
     }
 }

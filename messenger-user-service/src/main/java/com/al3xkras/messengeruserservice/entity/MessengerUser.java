@@ -13,6 +13,7 @@ import java.util.Objects;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @Builder
 @Entity
 @Table(name = "messenger_user")
@@ -37,16 +38,5 @@ public class MessengerUser {
     @Enumerated(EnumType.STRING)
     public MessengerUserType messengerUserType;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        MessengerUser that = (MessengerUser) o;
-        return messengerUserId != null && Objects.equals(messengerUserId, that.messengerUserId);
-    }
 
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }
