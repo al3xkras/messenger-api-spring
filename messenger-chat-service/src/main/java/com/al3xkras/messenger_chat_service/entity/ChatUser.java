@@ -43,5 +43,15 @@ public class ChatUser {
     @ToString.Exclude
     private Chat chat;
 
+    @PrePersist
+    private void beforePersist(){
+        if (chatId==null && chat!=null && chat.getChatId()!=null){
+            chatId = chat.getChatId();
+        }
+        if (userId==null && messengerUser!=null && messengerUser.getMessengerUserId()!=null){
+            userId = messengerUser.getMessengerUserId();
+        }
+    }
+
 
 }

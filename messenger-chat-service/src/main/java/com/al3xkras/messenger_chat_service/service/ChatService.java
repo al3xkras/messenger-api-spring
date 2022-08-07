@@ -6,6 +6,7 @@ import com.al3xkras.messenger_chat_service.entity.MessengerUser;
 import com.al3xkras.messenger_chat_service.exception.ChatNotFoundException;
 import com.al3xkras.messenger_chat_service.exception.ChatUserNotFoundException;
 import com.al3xkras.messenger_chat_service.model.ChatUserId;
+import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.repository.ChatRepository;
 import com.al3xkras.messenger_chat_service.repository.ChatUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +19,14 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class ChatService {
 
+    private final ChatRepository chatRepository;
+    private final ChatUserRepository chatUserRepository;
+
     @Autowired
-    private ChatRepository chatRepository;
-    @Autowired
-    private ChatUserRepository chatUserRepository;
-    @Autowired
-    private RestTemplate restTemplate;
+    public ChatService(ChatRepository chatRepository, ChatUserRepository chatUserRepository) {
+        this.chatRepository = chatRepository;
+        this.chatUserRepository = chatUserRepository;
+    }
 
     public Page<Chat> findAllByMessengerUserId(Long messengerUserId, Pageable pageable) {
         return chatRepository.findAllByUserId(messengerUserId, pageable);
@@ -33,8 +36,16 @@ public class ChatService {
         return chatRepository.findAllByUsername(username,pageable);
     }
 
+    @Transactional
     public Chat createNewChat(Chat chat, MessengerUser creator) {
-        //TODO add first user to the chat
+        chat.setChatId(null);
+        ChatUser chatOwner = ChatUser.builder()
+                .chatId(chat.getChatId())
+                .userId(creator.getMessengerUserId())
+                .title("Admin")
+                .chatUserRole(ChatUserRole.ADMIN)
+                .build();
+        chatUserRepository.save(chatOwner);
         return chatRepository.save(chat);
     }
 
@@ -79,5 +90,21 @@ public class ChatService {
 
     public void deleteChatUser(ChatUser chatUser) throws ChatUserNotFoundException{
         chatUserRepository.delete(chatUser);
+    }
+
+    public Page<ChatUser> findAllChatUsersByChatIdFetchMessengerUser(Long chatId, Pageable pageable) {
+        return chatUserRepository.findAllByChatIdFetchMessengerUser(chatId,pageable);
+    }
+
+    public Page<ChatUser> findAllChatUsersByChatId(Long chatId, Pageable pageable) {
+        return chatUserRepository.findAllByChatId(chatId,pageable);
+    }
+
+    public Page<ChatUser> findAllChatUsersByChatNameFetchMessengerUser(String chatName, Pageable pageable) {
+        return chatUserRepository.findAllByChatNameFetchMessengerUser(chatName,pageable);
+    }
+
+    public Page<ChatUser> findAllChatUsersByChatName(String chatName, Pageable pageable) {
+        return chatUserRepository.findAllByChatName(chatName,pageable);
     }
 }
