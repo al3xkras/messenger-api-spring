@@ -3,12 +3,15 @@ package com.al3xkras.messengeruserservice.repository;
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -103,6 +106,15 @@ class MessengerUserRepositoryTest {
         Assertions.assertEquals(firstUser,messengerUserRepository.findById(1L).orElse(null));
         messengerUserRepository.save(updatedFirstUser);
         Assertions.assertEquals(updatedFirstUser,messengerUserRepository.findById(1L).orElse(null));
+    }
+
+    @Test
+    void whenSaveUserWithExistingUsername_thenThrowSqlIntegrity(){
+        Assertions.assertEquals(firstUser,messengerUserRepository.findByUsername("user1").orElse(null));
+
+        Assertions.assertThrows(DataIntegrityViolationException.class,()->{
+            messengerUserRepository.saveAndFlush(MessengerUser.builder().username("user1").messengerUserType(MessengerUserType.USER).build());
+        });
     }
 
     @Test

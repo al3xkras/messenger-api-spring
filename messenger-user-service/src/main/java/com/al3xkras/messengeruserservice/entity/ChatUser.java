@@ -3,10 +3,8 @@ package com.al3xkras.messengeruserservice.entity;
 import com.al3xkras.messengeruserservice.model.ChatUserId;
 import com.al3xkras.messengeruserservice.model.ChatUserRole;
 import lombok.*;
-import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import java.util.Objects;
 
 
 @Getter

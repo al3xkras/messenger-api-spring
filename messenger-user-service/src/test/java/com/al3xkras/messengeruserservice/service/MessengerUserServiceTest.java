@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
@@ -104,7 +105,7 @@ class MessengerUserServiceTest {
                     return userToSaveWithId;
                 });
 
-        HibernateException sqlIntegrity = new HibernateException(new SQLIntegrityConstraintViolationException());
+        DataIntegrityViolationException sqlIntegrity = new DataIntegrityViolationException("username");
         Mockito.when(messengerUserRepository.save(userWithExistingUsername))
                 .thenThrow(sqlIntegrity);
     }

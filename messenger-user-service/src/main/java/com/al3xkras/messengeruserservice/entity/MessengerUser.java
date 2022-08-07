@@ -2,10 +2,8 @@ package com.al3xkras.messengeruserservice.entity;
 
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import lombok.*;
-import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import java.util.Objects;
 
 
 @Getter
@@ -16,7 +14,9 @@ import java.util.Objects;
 @EqualsAndHashCode
 @Builder
 @Entity
-@Table(name = "messenger_user")
+@Table(name = "messenger_user", uniqueConstraints = @UniqueConstraint(name = "messenger_user_username_un",columnNames = {
+        "username"
+}))
 public class MessengerUser {
     @Id
     @SequenceGenerator(name = "messenger_user_seq", sequenceName = "messenger_user_seq",allocationSize = 1)

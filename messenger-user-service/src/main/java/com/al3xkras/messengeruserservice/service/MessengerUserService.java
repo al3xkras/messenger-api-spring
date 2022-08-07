@@ -6,6 +6,7 @@ import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundExceptio
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,16 +33,12 @@ public class MessengerUserService {
 
     @Transactional
     public MessengerUser saveUser(MessengerUser messengerUser) {
-        messengerUser.setMessengerUserId(null);
         try {
-            messengerUserRepository.save(messengerUser);
-        } catch (HibernateException e){
-            if (e.getCause() instanceof SQLIntegrityConstraintViolationException)
-                throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
-            throw e;
+            messengerUser.setMessengerUserId(null);
+            return messengerUserRepository.save(messengerUser);
+        } catch (DataIntegrityViolationException e){
+            throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
         }
-        return messengerUserRepository.findByUsername(messengerUser.getUsername())
-                .orElseThrow(()->new MessengerUserAlreadyExistsException(messengerUser.getUsername()));
     }
 
     @Transactional
