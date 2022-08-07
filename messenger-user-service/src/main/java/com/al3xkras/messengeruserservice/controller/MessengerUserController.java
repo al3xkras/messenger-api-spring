@@ -88,8 +88,10 @@ public class MessengerUserController {
                             throws MessengerUserNotFoundException{
         if (messengerUserId!=null){
             messengerUserService.deleteById(messengerUserId);
+            return;
         } else if (username!=null){
             messengerUserService.deleteByUsername(username);
+            return;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
     }

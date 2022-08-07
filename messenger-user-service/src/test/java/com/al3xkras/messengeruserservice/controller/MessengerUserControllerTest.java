@@ -239,7 +239,6 @@ class MessengerUserControllerTest {
         Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdateByUsername))
                 .thenThrow(MessengerUserNotFoundException.class);
 
-
         mockMvc.perform(MockMvcRequestBuilders.put("/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
@@ -253,6 +252,40 @@ class MessengerUserControllerTest {
                         .param("username","user1"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.content().string("user not found"));
+    }
 
+    @Test
+    void whenDeleteUserThatExists_thenReturnResponseStatusOk() throws Exception {
+        Mockito.doNothing()
+                .when(messengerUserService).deleteById(firstUser.getMessengerUserId());
+        Mockito.doNothing()
+                .when(messengerUserService).deleteByUsername(firstUser.getUsername());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("username",firstUser.getUsername()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void whenDeleteUserThatDoesNotExist_thenThrowHttpStatusNotFound() throws Exception {
+        Mockito.doThrow(MessengerUserNotFoundException.class)
+                .when(messengerUserService).deleteById(firstUser.getMessengerUserId());
+        Mockito.doThrow(MessengerUserNotFoundException.class)
+                .when(messengerUserService).deleteByUsername(firstUser.getUsername());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("username",firstUser.getUsername()))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+    }
+
+    @Test
+    void whenDeleteUser_andNoUsernameOrIdIsSpecified_thenThrowHttpStatusBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().string("please specify \"username\" or \"user-id\""));
     }
 }
