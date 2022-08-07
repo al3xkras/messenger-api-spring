@@ -31,11 +31,10 @@ public class MessengerUserService {
                 .orElseThrow(MessengerUserNotFoundException::new);
     }
 
-    @Transactional
     public MessengerUser saveUser(MessengerUser messengerUser) {
         try {
             messengerUser.setMessengerUserId(null);
-            return messengerUserRepository.save(messengerUser);
+            return messengerUserRepository.saveAndFlush(messengerUser);
         } catch (DataIntegrityViolationException e){
             throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
         }
