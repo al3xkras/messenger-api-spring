@@ -6,13 +6,11 @@ import com.al3xkras.messenger_chat_service.entity.MessengerUser;
 import com.al3xkras.messenger_chat_service.model.ChatUserId;
 import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.model.MessengerUserType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -135,34 +133,64 @@ class ChatUserRepositoryTest {
     }
 
     @Test
-    void whenFindAllByChatIdFetchMessengerUser_thenReturn(){
+    void whenFindAllByChatId_thenReturn(){
         Pageable firstPageOfSize1 = PageRequest.of(0,1);
         Pageable firstPageOfSize2 = PageRequest.of(0,2);
         Pageable firstPageOfSize200 = PageRequest.of(0,200);
 
-        List<ChatUser> chatUsersOfFirstChat = chatUserRepository.findAllByChatIdFetchMessengerUser(firstChat.getChatId(),
+        List<ChatUser> chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
                 firstPageOfSize1).toList();
         assertEquals(1,chatUsersOfFirstChat.size());
         assertEquals(chatUser11,chatUsersOfFirstChat.get(0));
         assertEquals(firstUser,chatUsersOfFirstChat.get(0).getMessengerUser());
 
-        chatUsersOfFirstChat = chatUserRepository.findAllByChatIdFetchMessengerUser(firstChat.getChatId(),
+        chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
                 PageRequest.of(1,1)).toList();
         assertEquals(chatUsersOfFirstChat.size(),1);
         assertEquals(chatUsersOfFirstChat.get(0),chatUser12);
         assertEquals(secondUser,chatUsersOfFirstChat.get(0).getMessengerUser());
 
-        chatUsersOfFirstChat = chatUserRepository.findAllByChatIdFetchMessengerUser(firstChat.getChatId(),
+        chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
                 firstPageOfSize2).toList();
         assertEquals(chatUsersOfFirstChat.size(),2);
         assertEquals(chatUsersOfFirstChat.get(0),chatUser11);
         assertEquals(chatUsersOfFirstChat.get(1),chatUser12);
 
-        chatUsersOfFirstChat = chatUserRepository.findAllByChatIdFetchMessengerUser(firstChat.getChatId(),
+        chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
                 firstPageOfSize200).toList();
         assertEquals(chatUsersOfFirstChat.size(),2);
         assertEquals(chatUsersOfFirstChat.get(0),chatUser11);
         assertEquals(chatUsersOfFirstChat.get(1),chatUser12);
+    }
+
+    @Test
+    void whenMessengerUserIsModified_thenChatUserReturnsModifiedMessengerUser(){
+        Pageable firstPageOfSize1 = PageRequest.of(0,1);
+
+        List<ChatUser> chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
+                firstPageOfSize1).toList();
+        assertEquals(1,chatUsersOfFirstChat.size());
+        assertEquals(chatUser11,chatUsersOfFirstChat.get(0));
+        assertEquals(firstUser,chatUsersOfFirstChat.get(0).getMessengerUser());
+
+        MessengerUser firstUserModified = MessengerUser.builder()
+                .messengerUserId(1L)
+                .username("user1")
+                .name("Modified")
+                .emailAddress("mod@gmail.com")
+                .phoneNumber("213-22-33")
+                .messengerUserType(MessengerUserType.ADMIN)
+                .build();
+
+        testEntityManager.remove(firstUser);
+        testEntityManager.persist(firstUserModified);
+
+        chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
+                firstPageOfSize1).toList();
+        assertEquals(1,chatUsersOfFirstChat.size());
+        assertEquals(chatUser11,chatUsersOfFirstChat.get(0));
+        assertEquals(firstUserModified,chatUsersOfFirstChat.get(0).getMessengerUser());
+
     }
 
 }

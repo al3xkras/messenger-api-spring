@@ -20,6 +20,8 @@ import java.util.Objects;
 public class Chat {
 
     @Id
+    @SequenceGenerator(name = "chat_seq",sequenceName = "chat_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "chat_seq")
     @Column(name = "chat_id")
     private Long chatId;
     @Column(name = "chat_name")
@@ -32,6 +34,11 @@ public class Chat {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         Chat chat = (Chat) o;
         return chatId != null && Objects.equals(chatId, chat.chatId);
+    }
+
+    @PrePersist
+    void beforePersist(){
+        chatId = null;
     }
 
     @Override

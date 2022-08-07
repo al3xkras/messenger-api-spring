@@ -31,13 +31,13 @@ public class ChatUser {
     private String title;
     private ChatUserRole chatUserRole;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id",
             referencedColumnName = "messenger_user_id", insertable = false, updatable = false)
     @ToString.Exclude
     private MessengerUser messengerUser;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "chat_id",
             referencedColumnName = "chat_id", insertable = false, updatable = false)
     @ToString.Exclude

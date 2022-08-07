@@ -15,10 +15,6 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
 
     @Transactional
     @Query("select chat from ChatUser chatUser join chatUser.chat chat where chatUser.userId=?1")
-    Page<Chat> findAllChatsByUserId(Long messengerUserId, Pageable pageable);
-
-    @Transactional
-    @Query("select chat from ChatUser chatUser join chatUser.chat chat where chatUser.userId=?1")
     Page<Chat> findAllByUserId(Long messengerUserId, Pageable pageable);
 
     @Transactional

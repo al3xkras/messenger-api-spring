@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ChatService {
@@ -92,16 +91,8 @@ public class ChatService {
         chatUserRepository.delete(chatUser);
     }
 
-    public Page<ChatUser> findAllChatUsersByChatIdFetchMessengerUser(Long chatId, Pageable pageable) {
-        return chatUserRepository.findAllByChatIdFetchMessengerUser(chatId,pageable);
-    }
-
     public Page<ChatUser> findAllChatUsersByChatId(Long chatId, Pageable pageable) {
         return chatUserRepository.findAllByChatId(chatId,pageable);
-    }
-
-    public Page<ChatUser> findAllChatUsersByChatNameFetchMessengerUser(String chatName, Pageable pageable) {
-        return chatUserRepository.findAllByChatNameFetchMessengerUser(chatName,pageable);
     }
 
     public Page<ChatUser> findAllChatUsersByChatName(String chatName, Pageable pageable) {

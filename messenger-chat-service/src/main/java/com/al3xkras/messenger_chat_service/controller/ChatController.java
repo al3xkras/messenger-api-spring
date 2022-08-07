@@ -110,17 +110,12 @@ public class ChatController {
     @GetMapping
     public Page<ChatUser> getAllChatUsersByChat(@RequestParam(value = "chat-id",required = false) Long chatId,
                                                 @RequestParam(value = "chat-name",required = false) String chatName,
-                                                @RequestParam(value = "fetch-messenger-user",required = false) boolean fetchMessengerUser,
                                                 @RequestBody PageRequestDto pageRequestDto){
 
         Pageable pageable = PageRequest.of(pageRequestDto.getPage(),pageRequestDto.getSize());
         if (chatId!=null){
-            if (fetchMessengerUser)
-                return chatService.findAllChatUsersByChatIdFetchMessengerUser(chatId,pageable);
             return chatService.findAllChatUsersByChatId(chatId,pageable);
         } else if (chatName!=null){
-            if (fetchMessengerUser)
-                return chatService.findAllChatUsersByChatNameFetchMessengerUser(chatName,pageable);
             return chatService.findAllChatUsersByChatName(chatName,pageable);
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
