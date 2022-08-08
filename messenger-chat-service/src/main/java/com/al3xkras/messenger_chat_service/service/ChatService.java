@@ -3,23 +3,33 @@ package com.al3xkras.messenger_chat_service.service;
 import com.al3xkras.messenger_chat_service.entity.Chat;
 import com.al3xkras.messenger_chat_service.entity.ChatUser;
 import com.al3xkras.messenger_chat_service.entity.MessengerUser;
+import com.al3xkras.messenger_chat_service.exception.ChatNameAlreadyExistsException;
 import com.al3xkras.messenger_chat_service.exception.ChatNotFoundException;
 import com.al3xkras.messenger_chat_service.exception.ChatUserNotFoundException;
+import com.al3xkras.messenger_chat_service.exception.InvalidMessengerUserException;
 import com.al3xkras.messenger_chat_service.model.ChatUserId;
 import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.repository.ChatRepository;
 import com.al3xkras.messenger_chat_service.repository.ChatUserRepository;
+import org.hibernate.TransientPropertyValueException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 @Service
 public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatUserRepository chatUserRepository;
+
 
     @Autowired
     public ChatService(ChatRepository chatRepository, ChatUserRepository chatUserRepository) {
@@ -36,16 +46,28 @@ public class ChatService {
     }
 
     @Transactional
-    public Chat createNewChat(Chat chat, MessengerUser creator) {
-        chat.setChatId(null);
+    public Chat saveChat(Chat chat, MessengerUser creator) {
+        if (creator.getMessengerUserId()==null)
+            throw new InvalidMessengerUserException("chat creator has null ID");
         ChatUser chatOwner = ChatUser.builder()
-                .chatId(chat.getChatId())
-                .userId(creator.getMessengerUserId())
+                .chat(chat)
+                .messengerUser(creator)
                 .title("Admin")
                 .chatUserRole(ChatUserRole.ADMIN)
                 .build();
-        chatUserRepository.save(chatOwner);
-        return chatRepository.save(chat);
+        try {
+            Chat saved = chatRepository.save(chat);
+            chatUserRepository.saveAndFlush(chatOwner);
+            return saved;
+        } catch (DataIntegrityViolationException e){
+            throw new ChatNameAlreadyExistsException(chat.getChatName());
+        } catch (InvalidDataAccessApiUsageException e){
+            if (e.getCause().getCause() instanceof TransientPropertyValueException){
+                throw new InvalidMessengerUserException("messenger user with id "+creator.getMessengerUserId()+" not found");
+            } else {
+                throw e;
+            }
+        }
     }
 
     public Chat findChatById(Long chatId) {
@@ -70,8 +92,11 @@ public class ChatService {
         return chatRepository.save(updated);
     }
 
-    public ChatUser addChatUser(ChatUser chatUser) {
-        return chatUserRepository.save(chatUser);
+    @Transactional
+    public ChatUser addChatUser(ChatUser chatUser) throws ChatUserAlreadyExistsException{
+        if (chatUserRepository.findById(new ChatUserId(chatUser.getChatId(),chatUser.getUserId())).isPresent())
+            throw new ChatUserAlreadyExistsException();
+        return chatUserRepository.saveAndFlush(chatUser);
     }
 
     @Transactional
@@ -88,7 +113,12 @@ public class ChatService {
     }
 
     public void deleteChatUser(ChatUser chatUser) throws ChatUserNotFoundException{
-        chatUserRepository.delete(chatUser);
+        ChatUserId id = new ChatUserId(chatUser.getChatId(),chatUser.getUserId());
+        try {
+            chatUserRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e){
+            throw new ChatUserNotFoundException();
+        }
     }
 
     public Page<ChatUser> findAllChatUsersByChatId(Long chatId, Pageable pageable) {

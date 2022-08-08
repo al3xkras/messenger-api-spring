@@ -43,7 +43,7 @@ public class ChatController {
                 .chatDisplayName(chatDTO.getDisplayName())
                 .build();
 
-        return chatService.createNewChat(chat, null);
+        return chatService.saveChat(chat, null);
     }
 
     @GetMapping("chat")

@@ -28,10 +28,12 @@ public class ChatUser {
     @Column(name = "user_id",nullable = false)
     private Long userId;
 
+    @Column(name = "title", columnDefinition = "nvarchar(20)")
     private String title;
+    @Column(name = "chat_user_role", nullable = false)
     private ChatUserRole chatUserRole;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id",
             referencedColumnName = "messenger_user_id", insertable = false, updatable = false)
     @ToString.Exclude

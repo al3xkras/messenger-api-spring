@@ -2,3 +2,9 @@ server:
   port: 10002
 spring:
   mandatory-file-encoding: UTF-8
+logging:
+  level:
+    org:
+      springframework:
+        transaction:
+          interceptor: TRACE

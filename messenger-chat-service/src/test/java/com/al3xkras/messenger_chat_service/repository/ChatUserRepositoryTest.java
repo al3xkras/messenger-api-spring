@@ -6,15 +6,17 @@ import com.al3xkras.messenger_chat_service.entity.MessengerUser;
 import com.al3xkras.messenger_chat_service.model.ChatUserId;
 import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.model.MessengerUserType;
+import org.hibernate.TransientPropertyValueException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,13 +57,11 @@ class ChatUserRepositoryTest {
             .build();
 
     static Chat firstChat = Chat.builder()
-            .chatId(1L)
             .chatName("first_chat")
             .chatDisplayName("First Chat!")
             .build();
 
     static Chat secondChat = Chat.builder()
-            .chatId(2L)
             .chatName("second_chat")
             .chatDisplayName("Second Chat!")
             .build();
@@ -191,6 +191,49 @@ class ChatUserRepositoryTest {
         assertEquals(chatUser11,chatUsersOfFirstChat.get(0));
         assertEquals(firstUserModified,chatUsersOfFirstChat.get(0).getMessengerUser());
 
+    }
+
+    @Test
+    void whenSaveChatUserWithInvalidMessengerUser_thenThrowInvalidDataAccessApiUsageException(){
+        MessengerUser notPersisted = MessengerUser.builder()
+                .messengerUserId(4L)
+                .username("user4")
+                .name("Mike")
+                .emailAddress("mike@gmail.com")
+                .phoneNumber("456-75-645")
+                .messengerUserType(MessengerUserType.USER)
+                .build();
+        ChatUser chatUser = ChatUser.builder()
+                .messengerUser(notPersisted)
+                .chat(firstChat)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+        try {
+            chatUserRepository.saveAndFlush(chatUser);
+            throw new RuntimeException();
+        } catch (InvalidDataAccessApiUsageException e){
+            assertInstanceOf(TransientPropertyValueException.class,e.getCause().getCause());
+        }
+    }
+
+    @Test
+    void whenDeleteChatUserThatDoesNotExist_thenThrowEmptyResultDataAccessException(){
+        Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
+            chatUserRepository.deleteById(new ChatUserId(chatUser23.getChatId(),chatUser23.getUserId()));
+        });
+    }
+
+    @Test
+    void whenDeleteChatUserByInvalidId_thenThrowEmptyResultDataAccessException(){
+        Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
+            chatUserRepository.deleteById(new ChatUserId(null,chatUser23.getUserId()));
+        });
+        Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
+            chatUserRepository.deleteById(new ChatUserId(chatUser23.getChatId(),null));
+        });
+        Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
+            chatUserRepository.deleteById(new ChatUserId(null,null));
+        });
     }
 
 }

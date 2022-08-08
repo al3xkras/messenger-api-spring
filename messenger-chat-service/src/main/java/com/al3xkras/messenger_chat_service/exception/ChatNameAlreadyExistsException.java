@@ -5,7 +5,7 @@ public class ChatNameAlreadyExistsException extends RuntimeException {
     }
 
     public ChatNameAlreadyExistsException(String message) {
-        super(message);
+        super("Chat name \""+message+"\" already exists");
     }
 
     public ChatNameAlreadyExistsException(String message, Throwable cause) {
