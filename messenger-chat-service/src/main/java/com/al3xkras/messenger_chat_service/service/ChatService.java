@@ -46,7 +46,7 @@ public class ChatService {
     }
 
     @Transactional
-    public Chat saveChat(Chat chat, MessengerUser creator) {
+    public Chat saveChat(Chat chat, MessengerUser creator) throws ChatNameAlreadyExistsException,InvalidMessengerUserException{
         if (creator.getMessengerUserId()==null)
             throw new InvalidMessengerUserException("chat creator has null ID");
         ChatUser chatOwner = ChatUser.builder()

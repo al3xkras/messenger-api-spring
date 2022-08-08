@@ -17,6 +17,7 @@ import java.util.Objects;
 @Table(name = "chat", uniqueConstraints =
 @UniqueConstraint(name = "chat_name_un",columnNames = "chat_name")
 )
+@EqualsAndHashCode
 public class Chat {
 
     @Id
@@ -29,21 +30,8 @@ public class Chat {
     @Column(name = "chat_display_name", columnDefinition = "nvarchar(50)", nullable = false)
     private String chatDisplayName;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Chat chat = (Chat) o;
-        return chatId != null && Objects.equals(chatId, chat.chatId);
-    }
-
     @PrePersist
     void beforePersist(){
         chatId = null;
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 }
