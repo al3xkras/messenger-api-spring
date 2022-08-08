@@ -28,20 +28,32 @@ public class ChatUser {
     @Column(name = "user_id",nullable = false)
     private Long userId;
 
+    @Column(name = "title", columnDefinition = "nvarchar(20)")
     private String title;
+    @Column(name = "chat_user_role", nullable = false)
     private ChatUserRole chatUserRole;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id",
             referencedColumnName = "messenger_user_id", insertable = false, updatable = false)
     @ToString.Exclude
     private MessengerUser messengerUser;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "chat_id",
             referencedColumnName = "chat_id", insertable = false, updatable = false)
     @ToString.Exclude
     private Chat chat;
+
+    @PrePersist
+    private void beforePersist(){
+        if (chatId==null && chat!=null && chat.getChatId()!=null){
+            chatId = chat.getChatId();
+        }
+        if (userId==null && messengerUser!=null && messengerUser.getMessengerUserId()!=null){
+            userId = messengerUser.getMessengerUserId();
+        }
+    }
 
 
 }

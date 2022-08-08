@@ -197,8 +197,6 @@ class MessengerUserControllerTest {
                 .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
                 .build();
 
-        Mockito.when(messengerUserService.updateUserById(firstUserUpdateByUsername))
-                .thenThrow(RuntimeException.class);
         Mockito.when(messengerUserService.updateUserByUsername(firstUserUpdateByUsername))
                 .thenReturn(firstUserAfterUpdate);
 
