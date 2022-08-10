@@ -2,6 +2,8 @@ package com.al3xkras.messengeruserservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class MessengerUserServiceApplication {
@@ -10,4 +12,8 @@ public class MessengerUserServiceApplication {
 		SpringApplication.run(MessengerUserServiceApplication.class, args);
 	}
 
+	@Bean
+	public RestTemplate restTemplate(){
+		return new RestTemplate();
+	}
 }

@@ -4,6 +4,7 @@ import com.al3xkras.messengeruserservice.dto.MessengerUserDTO;
 import com.al3xkras.messengeruserservice.dto.PageRequestDto;
 import com.al3xkras.messengeruserservice.entity.Chat;
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
+import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.service.MessengerUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 
@@ -22,7 +25,9 @@ import javax.validation.Valid;
 public class MessengerUserController {
 
     @Autowired
-    public MessengerUserService messengerUserService;
+    private MessengerUserService messengerUserService;
+    @Autowired
+    private RestTemplate restTemplate;
 
     @ExceptionHandler(MessengerUserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -33,6 +38,11 @@ public class MessengerUserController {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e){
         return ResponseEntity.status(e.getStatus()).body(e.getReason());
+    }
+
+    @ExceptionHandler(MessengerUserAlreadyExistsException.class)
+    public ResponseEntity<String> handleMessengerUserAlreadyExistsException(){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("messenger user with specified username already exists");
     }
 
     @GetMapping("{id}")
@@ -48,7 +58,7 @@ public class MessengerUserController {
     }
 
     @PostMapping
-    public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto){
+    public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDto.getUsername())
                 .name(messengerUserDto.getName())
@@ -98,10 +108,15 @@ public class MessengerUserController {
 
 
     @GetMapping("user/{id}/chats")
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Page<Chat> getUserChatsByUserId(@PathVariable("id") Long messengerUserId,
                                            @RequestBody PageRequestDto pageRequestDto){
-        //TODO implement
-        return null;
+
+        Page<Chat> chats = restTemplate.getForObject(UriComponentsBuilder
+                .fromHttpUrl("/chats")
+                .queryParam("user-id",messengerUserId)
+                .build().toUriString(),Page.class);
+        if (chats==null)
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"no response from chat service");
+        return chats;
     }
 }

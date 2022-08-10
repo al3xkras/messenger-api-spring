@@ -31,7 +31,7 @@ public class MessengerUserService {
                 .orElseThrow(MessengerUserNotFoundException::new);
     }
 
-    public MessengerUser saveUser(MessengerUser messengerUser) {
+    public MessengerUser saveUser(MessengerUser messengerUser) throws MessengerUserAlreadyExistsException{
         try {
             messengerUser.setMessengerUserId(null);
             return messengerUserRepository.saveAndFlush(messengerUser);
