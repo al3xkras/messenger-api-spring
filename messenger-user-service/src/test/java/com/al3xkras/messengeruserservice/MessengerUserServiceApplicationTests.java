@@ -70,50 +70,6 @@ class MessengerUserServiceApplicationTests {
 			.messengerUserType(MessengerUserType.USER)
 			.build();
 
-	static Chat firstChat = Chat.builder()
-			.chatName("first_chat")
-			.chatDisplayName("First Chat!")
-			.build();
-
-	static Chat secondChat = Chat.builder()
-			.chatName("second_chat")
-			.chatDisplayName("Second Chat!")
-			.build();
-
-	static ChatUser chatUser11 = ChatUser.builder()
-			.chat(firstChat)
-			.messengerUser(firstUser)
-			.title("Admin of chat 1")
-			.chatUserRole(ChatUserRole.ADMIN)
-			.build();
-
-	static ChatUser chatUser12 = ChatUser.builder()
-			.chat(firstChat)
-			.messengerUser(secondUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
-
-	static ChatUser chatUser21 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(thirdUser)
-			.title("Admin of chat 2")
-			.chatUserRole(ChatUserRole.ADMIN)
-			.build();
-
-	static ChatUser chatUser22 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(firstUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
-
-	static ChatUser chatUser23 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(secondUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
-
-
-
 	@Test
 	@Order(1)
 	void testAddNewUser() throws Exception {

@@ -25,7 +25,7 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "chat_seq")
     @Column(name = "chat_id", nullable = false)
     private Long chatId;
-    @Column(name = "chat_name", columnDefinition = "varchar(15)", nullable = false)
+    @Column(name = "chat_name", columnDefinition = "varchar(30)", nullable = false)
     private String chatName;
     @Column(name = "chat_display_name", columnDefinition = "nvarchar(50)", nullable = false)
     private String chatDisplayName;

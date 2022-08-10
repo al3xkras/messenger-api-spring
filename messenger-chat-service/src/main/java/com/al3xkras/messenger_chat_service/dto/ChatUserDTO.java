@@ -13,7 +13,7 @@ public class ChatUserDTO {
     private Long chatId;
     @NotNull
     private Long userId;
-    private String title = "";
+    private String title;
     @NotNull
     private ChatUserRole chatUserRole;
 }

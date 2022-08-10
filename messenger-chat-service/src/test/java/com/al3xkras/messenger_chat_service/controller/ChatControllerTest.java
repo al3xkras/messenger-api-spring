@@ -193,6 +193,11 @@ class ChatControllerTest {
                 .title("I am modified!").chatUserRole(ChatUserRole.USER)
                 .build();
 
+        ChatUserDTO chatUserDTOInvalid2 = ChatUserDTO.builder()
+                .chatId(1L).userId(1L)
+                .title("I am modified!")
+                .build();
+
         ChatUser chatUserModified = ChatUser.builder()
                 .chatId(1L).userId(1L)
                 .title("I am modified!").chatUserRole(ChatUserRole.USER)
@@ -208,6 +213,11 @@ class ChatControllerTest {
 
         mockMvc.perform(put("/chat/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(chatUserDTOInvalid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("invalid chat DTO"));
+
+        mockMvc.perform(put("/chat/users").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(chatUserDTOInvalid2)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("invalid chat DTO"));
 

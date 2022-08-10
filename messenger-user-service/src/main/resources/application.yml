@@ -5,11 +5,11 @@ spring:
     jpa:
       repositories:
         enabled: true
-  # datasource:
-  #   url: jdbc:mysql://localhost/messenger_db
-  #   driverClassName: com.mysql.cj.jdbc.Driver
-  #   username: root
-  #   password: root
+  datasource:
+    url: jdbc:mysql://localhost/messenger_db
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
   h2:
     console:
       enabled: true
@@ -17,7 +17,7 @@ spring:
     restart:
       enabled: true
   jpa:
-    #database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     show-sql: true
     hibernate:
       ddl-auto: update

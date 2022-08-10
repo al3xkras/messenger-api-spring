@@ -11,6 +11,7 @@ import com.al3xkras.messenger_chat_service.model.ChatUserId;
 import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.repository.ChatRepository;
 import com.al3xkras.messenger_chat_service.repository.ChatUserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.TransientPropertyValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,8 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+@Slf4j
 @Service
 public class ChatService {
+
+    public static final String DEFAULT_TITLE_ADMIN = "Admin";
 
     private final ChatRepository chatRepository;
     private final ChatUserRepository chatUserRepository;
@@ -52,7 +56,7 @@ public class ChatService {
         ChatUser chatOwner = ChatUser.builder()
                 .chat(chat)
                 .messengerUser(creator)
-                .title("Admin")
+                .title(DEFAULT_TITLE_ADMIN)
                 .chatUserRole(ChatUserRole.ADMIN)
                 .build();
         try {
@@ -81,7 +85,7 @@ public class ChatService {
     }
 
     @Transactional
-    public Chat updateChat(Chat chat) throws ChatNotFoundException {
+    public Chat updateChat(Chat chat) throws ChatNotFoundException, ChatNameAlreadyExistsException {
         Chat beforeUpdate = chatRepository.findById(chat.getChatId())
                 .orElseThrow(ChatNotFoundException::new);
         Chat updated = Chat.builder()
@@ -89,13 +93,21 @@ public class ChatService {
                 .chatName(chat.getChatName()==null?beforeUpdate.getChatName():chat.getChatName())
                 .chatDisplayName(chat.getChatDisplayName()==null?beforeUpdate.getChatDisplayName():chat.getChatDisplayName())
                 .build();
-        return chatRepository.save(updated);
+        try {
+            return chatRepository.saveAndFlush(updated);
+        } catch (DataIntegrityViolationException e){
+            throw new ChatNameAlreadyExistsException(chat.getChatName());
+        }
     }
 
     @Transactional
     public ChatUser addChatUser(ChatUser chatUser) throws ChatUserAlreadyExistsException{
-        if (chatUserRepository.findById(new ChatUserId(chatUser.getChatId(),chatUser.getUserId())).isPresent())
+        ChatUser found = chatUserRepository.findById(new ChatUserId(chatUser.getChatId(),chatUser.getUserId()))
+                .orElse(null);
+        if (found!=null) {
+            log.error(found.toString());
             throw new ChatUserAlreadyExistsException();
+        }
         return chatUserRepository.saveAndFlush(chatUser);
     }
 

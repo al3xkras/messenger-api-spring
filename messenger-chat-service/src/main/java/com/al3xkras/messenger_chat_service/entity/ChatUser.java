@@ -36,13 +36,11 @@ public class ChatUser {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id",
             referencedColumnName = "messenger_user_id", insertable = false, updatable = false)
-    @ToString.Exclude
     private MessengerUser messengerUser;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "chat_id",
             referencedColumnName = "chat_id", insertable = false, updatable = false)
-    @ToString.Exclude
     private Chat chat;
 
     @PrePersist
@@ -55,5 +53,17 @@ public class ChatUser {
         }
     }
 
+    public Long getChatId() {
+        if (chatId==null)
+            if (chat!=null && chat.getChatId()!=null)
+                return chat.getChatId();
+        return chatId;
+    }
 
+    public Long getUserId() {
+        if (userId==null)
+            if (messengerUser!=null && messengerUser.getMessengerUserId()!=null)
+                return messengerUser.getMessengerUserId();
+        return userId;
+    }
 }
