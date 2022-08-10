@@ -8,8 +8,11 @@ import com.al3xkras.messengeruserservice.entity.MessengerUser;
 import com.al3xkras.messengeruserservice.model.ChatUserRole;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,8 +23,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MessengerUserServiceApplicationTests {
 
 	@Autowired
@@ -260,6 +265,170 @@ class MessengerUserServiceApplicationTests {
 						.content(objectMapper.writeValueAsString(invalidPasswordUserDto3)))
 				.andExpect(status().isBadRequest());
 
+	}
+
+	@Test
+	@Order(2)
+	void testFindUserById() throws Exception{
+
+		mockMvc.perform(get("/user/"+firstUser.getMessengerUserId()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
+
+		mockMvc.perform(get("/user/"+thirdUser.getMessengerUserId()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(thirdUser)));
+
+		mockMvc.perform(get("/user/"+10L))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("user not found"));
+
+	}
+
+	@Test
+	@Order(3)
+	void testFindUserByUsername() throws Exception {
+
+		mockMvc.perform(get("/user").param("username",firstUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
+
+		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+		mockMvc.perform(get("/user"))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(get("/user").param("username","user10000"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("user not found"));
+
+	}
+
+	@Test
+	@Order(4)
+	void testEditUserData() throws Exception {
+
+		MessengerUserDTO validDto1 = MessengerUserDTO.builder()
+				.username("username")
+				.name(firstUser.getName())
+				.password("1a83F_234567$")
+				.surname(firstUser.getSurname())
+				.phoneNumber(firstUser.getPhoneNumber())
+				.email(firstUser.getEmailAddress())
+				.messengerUserType(firstUser.getMessengerUserType())
+				.build();
+		MessengerUserDTO validDto2 = MessengerUserDTO.builder()
+				.username(firstUser.getUsername())
+				.name(firstUser.getName())
+				.password("1a83F_23.")
+				.surname("new Surname")
+				.phoneNumber(firstUser.getPhoneNumber())
+				.email(firstUser.getEmailAddress())
+				.messengerUserType(firstUser.getMessengerUserType())
+				.build();
+		MessengerUserDTO validDto3 = MessengerUserDTO.builder()
+				.username("newSecondUser")
+				.name(secondUser.getName())
+				.password("1a83F_23.")
+				.surname("SurnameForSecondUser")
+				.phoneNumber(secondUser.getPhoneNumber())
+				.email(secondUser.getEmailAddress())
+				.messengerUserType(secondUser.getMessengerUserType())
+				.build();
+
+		MessengerUserDTO usernameExistsWhenModifyByUserIdDto = MessengerUserDTO.builder()
+				.username(thirdUser.getUsername())
+				.name(thirdUser.getName())
+				.password("1a83F_234567$")
+				.surname(thirdUser.getSurname())
+				.phoneNumber("+472 435-22-13")
+				.email(thirdUser.getEmailAddress())
+				.messengerUserType(thirdUser.getMessengerUserType())
+				.build();
+
+		MessengerUserDTO invalidDto = MessengerUserDTO.builder()
+				.build();
+
+		MessengerUser[] afterEdit = new MessengerUser[1];
+
+
+		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andDo(result-> afterEdit[0] = objectMapper.readValue(
+						result.getResponse().getContentAsString(),MessengerUser.class)
+				);
+		assertNotNull(afterEdit[0]);
+		assertNotEquals(firstUser,afterEdit[0]);
+		firstUser = afterEdit[0];
+		log.info(firstUser.toString());
+
+
+		mockMvc.perform(put("/user").param("username",firstUser.getUsername())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andDo(result-> afterEdit[0] = objectMapper.readValue(
+						result.getResponse().getContentAsString(),MessengerUser.class)
+				);
+		assertNotNull(afterEdit[0]);
+		assertNotEquals(firstUser,afterEdit[0]);
+		firstUser = afterEdit[0];
+		log.info(firstUser.toString());
+
+		//modify by ID
+		mockMvc.perform(put("/user")
+						.param("user-id",secondUser.getMessengerUserId().toString())
+						.param("username",secondUser.getUsername())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto3)))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andDo(result-> afterEdit[0] = objectMapper.readValue(
+						result.getResponse().getContentAsString(),MessengerUser.class)
+				);
+		assertNotNull(afterEdit[0]);
+		assertNotEquals(secondUser,afterEdit[0]);
+		assertEquals(validDto3.getUsername(),afterEdit[0].getUsername());
+		secondUser = afterEdit[0];
+		log.info(secondUser.toString());
+
+
+		mockMvc.perform(put("/user")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isBadRequest());
+
+
+		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(usernameExistsWhenModifyByUserIdDto)))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("messenger user with specified username already exists"));
+
+		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(invalidDto)))
+				.andExpect(status().isBadRequest());
+
+	}
+
+	@Test
+	@Order(5)
+	void testFindUserByUsernameAfterUpdate() throws Exception {
+
+		mockMvc.perform(get("/user").param("username",firstUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
+
+		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
 	}
 
 }

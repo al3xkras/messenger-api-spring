@@ -73,7 +73,8 @@ public class MessengerUserController {
     @PutMapping
     public MessengerUser editUserData(@RequestParam(value = "user-id", required = false) Long messengerUserId,
                                       @RequestParam(value = "username", required = false) String username,
-                                      @RequestBody MessengerUserDTO messengerUserDTO){
+                                      @RequestBody @Valid MessengerUserDTO messengerUserDTO)
+            throws MessengerUserNotFoundException,MessengerUserAlreadyExistsException{
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDTO.getUsername())
                 .name(messengerUserDTO.getName())

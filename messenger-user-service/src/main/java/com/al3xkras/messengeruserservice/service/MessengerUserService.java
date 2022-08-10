@@ -10,8 +10,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 
@@ -41,7 +43,9 @@ public class MessengerUserService {
     }
 
     @Transactional
-    public MessengerUser updateUserById(MessengerUser messengerUser) {
+    public MessengerUser updateUserById(MessengerUser messengerUser) throws MessengerUserNotFoundException, MessengerUserAlreadyExistsException{
+        if (messengerUser.getMessengerUserId()==null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"user ID is null");
         MessengerUser beforeUpdate = messengerUserRepository.findById(messengerUser.getMessengerUserId())
                 .orElseThrow(MessengerUserNotFoundException::new);
         MessengerUser updated = MessengerUser.builder()
@@ -53,15 +57,21 @@ public class MessengerUserService {
                 .phoneNumber(messengerUser.getPhoneNumber()==null?beforeUpdate.getPhoneNumber():messengerUser.getPhoneNumber())
                 .messengerUserType(messengerUser.getMessengerUserType()==null?beforeUpdate.getMessengerUserType():messengerUser.getMessengerUserType())
                 .build();
-        return messengerUserRepository.save(updated);
+        try {
+            return messengerUserRepository.saveAndFlush(updated);
+        } catch (DataIntegrityViolationException e){
+            throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
+        }
     }
 
     @Transactional
-    public MessengerUser updateUserByUsername(MessengerUser messengerUser) {
-        MessengerUser beforeUpdate = messengerUserRepository.findById(messengerUser.getMessengerUserId())
+    public MessengerUser updateUserByUsername(MessengerUser messengerUser) throws MessengerUserNotFoundException {
+        if (messengerUser.getUsername()==null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"username is null");
+        MessengerUser beforeUpdate = messengerUserRepository.findByUsername(messengerUser.getUsername())
                 .orElseThrow(MessengerUserNotFoundException::new);
         MessengerUser updated = MessengerUser.builder()
-                .messengerUserId(messengerUser.getMessengerUserId()==null?beforeUpdate.getMessengerUserId():messengerUser.getMessengerUserId())
+                .messengerUserId(beforeUpdate.getMessengerUserId())
                 .username(messengerUser.getUsername())
                 .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
                 .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
@@ -69,7 +79,7 @@ public class MessengerUserService {
                 .phoneNumber(messengerUser.getPhoneNumber()==null?beforeUpdate.getPhoneNumber():messengerUser.getPhoneNumber())
                 .messengerUserType(messengerUser.getMessengerUserType()==null?beforeUpdate.getMessengerUserType():messengerUser.getMessengerUserType())
                 .build();
-        return messengerUserRepository.save(updated);
+        return messengerUserRepository.saveAndFlush(updated);
     }
 
     public Page<MessengerUser> findAllUsersByChatId(Long chatId, Pageable pageable) {
