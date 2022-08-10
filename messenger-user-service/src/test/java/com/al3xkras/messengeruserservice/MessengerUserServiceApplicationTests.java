@@ -19,6 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,8 +32,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MessengerUserServiceApplicationTests {
 
-	@Autowired
-	private MessengerUserController messengerUserController;
+	@PersistenceContext
+	private EntityManager entityManager;
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -427,6 +430,71 @@ class MessengerUserServiceApplicationTests {
 				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
 
 		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+	}
+
+	@Test
+	@Order(6)
+	void testDeleteMessengerUser() throws Exception{
+
+		mockMvc.perform(delete("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.param("username","thisUsernameWillBeIgnored"))
+				.andExpect(status().isOk())
+				.andExpect(content().string("deleted user with id "+firstUser.getMessengerUserId()));
+
+		mockMvc.perform(delete("/user")
+				.param("username",secondUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().string("deleted user with username : \""+secondUser.getUsername()+'\"'));
+
+		mockMvc.perform(delete("/user"))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(delete("/user")
+						.param("username","user1897432"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string( "user not found"));
+
+		mockMvc.perform(delete("/user")
+				.param("user-id",firstUser.getMessengerUserId().toString()))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string( "user not found"));
+
+	}
+
+	@Test
+	@Order(7)
+	void testAddNewUserAfterDelete() throws Exception{
+		MessengerUserDTO validUserDto1 = MessengerUserDTO.builder()
+				.username(firstUser.getUsername())
+				.name(firstUser.getName())
+				.password("1a83F_23.")
+				.surname(firstUser.getSurname())
+				.phoneNumber(firstUser.getPhoneNumber())
+				.email(firstUser.getEmailAddress())
+				.messengerUserType(firstUser.getMessengerUserType())
+				.build();
+		MessengerUserDTO validUserDto2 = MessengerUserDTO.builder()
+				.username(secondUser.getUsername())
+				.name(secondUser.getName())
+				.password("1a83F_23.")
+				.surname(secondUser.getSurname())
+				.phoneNumber(secondUser.getPhoneNumber())
+				.email(secondUser.getEmailAddress())
+				.messengerUserType(secondUser.getMessengerUserType())
+				.build();
+
+		firstUser.setMessengerUserId(5L);
+		secondUser.setMessengerUserId(6L);
+		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validUserDto1)))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
+
+		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validUserDto2)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
 	}

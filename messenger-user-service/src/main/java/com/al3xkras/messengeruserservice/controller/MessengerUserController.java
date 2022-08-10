@@ -10,8 +10,7 @@ import com.al3xkras.messengeruserservice.service.MessengerUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,8 +25,6 @@ public class MessengerUserController {
 
     @Autowired
     private MessengerUserService messengerUserService;
-    @Autowired
-    private RestTemplate restTemplate;
 
     @ExceptionHandler(MessengerUserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -94,30 +91,16 @@ public class MessengerUserController {
     }
 
     @DeleteMapping
-    public void deleteMessengerUser(@RequestParam(value = "user-id", required = false) Long messengerUserId,
+    public ResponseEntity<String> deleteMessengerUser(@RequestParam(value = "user-id", required = false) Long messengerUserId,
                                     @RequestParam(value = "username", required = false) String username)
                             throws MessengerUserNotFoundException{
         if (messengerUserId!=null){
             messengerUserService.deleteById(messengerUserId);
-            return;
+            return ResponseEntity.status(HttpStatus.OK).body("deleted user with id "+messengerUserId);
         } else if (username!=null){
             messengerUserService.deleteByUsername(username);
-            return;
+            return ResponseEntity.status(HttpStatus.OK).body("deleted user with username : \""+username+'\"');
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
-    }
-
-
-    @GetMapping("user/{id}/chats")
-    public Page<Chat> getUserChatsByUserId(@PathVariable("id") Long messengerUserId,
-                                           @RequestBody PageRequestDto pageRequestDto){
-
-        Page<Chat> chats = restTemplate.getForObject(UriComponentsBuilder
-                .fromHttpUrl("/chats")
-                .queryParam("user-id",messengerUserId)
-                .build().toUriString(),Page.class);
-        if (chats==null)
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"no response from chat service");
-        return chats;
     }
 }
