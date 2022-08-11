@@ -1,10 +1,8 @@
 package com.al3xkras.messenger_chat_service.entity;
 
 import lombok.*;
-import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import java.util.Objects;
 
 
 @Getter

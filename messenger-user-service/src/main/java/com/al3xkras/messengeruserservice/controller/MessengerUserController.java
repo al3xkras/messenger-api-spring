@@ -1,20 +1,16 @@
 package com.al3xkras.messengeruserservice.controller;
 
 import com.al3xkras.messengeruserservice.dto.MessengerUserDTO;
-import com.al3xkras.messengeruserservice.dto.PageRequestDto;
-import com.al3xkras.messengeruserservice.entity.Chat;
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
 import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.service.MessengerUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 

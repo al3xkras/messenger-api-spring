@@ -1,11 +1,7 @@
 package com.al3xkras.messengeruserservice;
 
-import com.al3xkras.messengeruserservice.controller.MessengerUserController;
 import com.al3xkras.messengeruserservice.dto.MessengerUserDTO;
-import com.al3xkras.messengeruserservice.entity.Chat;
-import com.al3xkras.messengeruserservice.entity.ChatUser;
 import com.al3xkras.messengeruserservice.entity.MessengerUser;
-import com.al3xkras.messengeruserservice.model.ChatUserRole;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +12,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.persistence.EntityManager;
@@ -24,7 +20,8 @@ import javax.persistence.PersistenceContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @SpringBootTest

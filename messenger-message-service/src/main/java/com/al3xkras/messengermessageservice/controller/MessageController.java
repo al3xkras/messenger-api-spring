@@ -4,7 +4,6 @@ import com.al3xkras.messengermessageservice.dto.MessageDTO;
 import com.al3xkras.messengermessageservice.dto.PageRequestDto;
 import com.al3xkras.messengermessageservice.entity.ChatMessage;
 import com.al3xkras.messengermessageservice.exception.ChatMessageNotFoundException;
-import com.al3xkras.messengermessageservice.model.ChatMessageId;
 import com.al3xkras.messengermessageservice.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

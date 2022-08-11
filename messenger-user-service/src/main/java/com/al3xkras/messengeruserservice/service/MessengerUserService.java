@@ -4,7 +4,6 @@ import com.al3xkras.messengeruserservice.entity.MessengerUser;
 import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
-import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.sql.SQLIntegrityConstraintViolationException;
 
 @Service
 public class MessengerUserService {

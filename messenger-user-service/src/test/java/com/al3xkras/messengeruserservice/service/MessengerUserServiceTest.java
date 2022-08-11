@@ -5,7 +5,6 @@ import com.al3xkras.messengeruserservice.exception.MessengerUserAlreadyExistsExc
 import com.al3xkras.messengeruserservice.exception.MessengerUserNotFoundException;
 import com.al3xkras.messengeruserservice.model.MessengerUserType;
 import com.al3xkras.messengeruserservice.repository.MessengerUserRepository;
-import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
 
 

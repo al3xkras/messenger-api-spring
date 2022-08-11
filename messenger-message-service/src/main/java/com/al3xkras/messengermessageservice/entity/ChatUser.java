@@ -1,7 +1,10 @@
 package com.al3xkras.messengermessageservice.entity;
 
 import com.al3xkras.messengermessageservice.model.ChatUserRole;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

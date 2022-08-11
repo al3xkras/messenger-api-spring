@@ -5,7 +5,6 @@ import com.al3xkras.messenger_chat_service.entity.ChatUser;
 import com.al3xkras.messenger_chat_service.entity.MessengerUser;
 import com.al3xkras.messenger_chat_service.model.ChatUserRole;
 import com.al3xkras.messenger_chat_service.model.MessengerUserType;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 class ChatRepositoryTest {

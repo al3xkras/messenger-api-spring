@@ -1,14 +1,12 @@
 package com.al3xkras.messengermessageservice.entity;
 
 
-
 import com.al3xkras.messengermessageservice.model.ChatMessageId;
 import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 
 @Getter
