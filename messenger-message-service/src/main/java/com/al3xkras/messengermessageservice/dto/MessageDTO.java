@@ -6,6 +6,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -16,7 +17,10 @@ public class MessageDTO {
     @NotNull
     private Long userId;
     @NotNull
-    private Date submissionDate;
+    private LocalDateTime submissionDate;
+
+
+
     @Size(min = 1, max = 128)
     private String message;
 }

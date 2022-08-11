@@ -6,6 +6,8 @@ import com.al3xkras.messengermessageservice.model.ChatMessageId;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 
@@ -28,9 +30,18 @@ public class ChatMessage {
     private Long userId;
     @Id
     @Column(name = "submission_date", columnDefinition = "DATETIME", nullable = false)
-    private Date submissionDate;
+    private LocalDateTime submissionDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_id", referencedColumnName = "chat_id", insertable = false, updatable = false)
+    private Chat chat;
 
     @Column(name = "message_str",columnDefinition = "nvarchar(255)",nullable = false)
     private String message;
+
+    @PrePersist
+    void beforePersist(){
+        submissionDate = submissionDate.truncatedTo(ChronoUnit.SECONDS);
+    }
 
 }
