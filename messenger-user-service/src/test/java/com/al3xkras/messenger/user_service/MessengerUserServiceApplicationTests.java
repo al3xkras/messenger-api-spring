@@ -1,8 +1,8 @@
 package com.al3xkras.messenger.user_service;
 
-import com.al3xkras.messenger.user_service.entity.MessengerUser;
-import com.al3xkras.messenger.user_service.model.MessengerUserType;
-import com.al3xkras.messenger.user_service.dto.MessengerUserDTO;
+import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.MethodOrderer;

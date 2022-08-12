@@ -1,9 +1,9 @@
 package com.al3xkras.messenger.message_service.controller;
 
 import com.al3xkras.messenger.message_service.service.MessageService;
-import com.al3xkras.messenger.message_service.dto.MessageDTO;
-import com.al3xkras.messenger.message_service.dto.PageRequestDto;
-import com.al3xkras.messenger.message_service.entity.ChatMessage;
+import com.al3xkras.messenger.dto.MessageDTO;
+import com.al3xkras.messenger.dto.PageRequestDto;
+import com.al3xkras.messenger.entity.ChatMessage;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

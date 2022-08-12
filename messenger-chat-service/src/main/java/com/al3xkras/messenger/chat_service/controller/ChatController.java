@@ -1,17 +1,17 @@
 package com.al3xkras.messenger.chat_service.controller;
 
-import com.al3xkras.messenger.chat_service.dto.ChatDTO;
-import com.al3xkras.messenger.chat_service.dto.ChatUserDTO;
-import com.al3xkras.messenger.chat_service.dto.PageRequestDto;
-import com.al3xkras.messenger.chat_service.entity.Chat;
-import com.al3xkras.messenger.chat_service.entity.ChatUser;
-import com.al3xkras.messenger.chat_service.entity.MessengerUser;
 import com.al3xkras.messenger.chat_service.exception.ChatNameAlreadyExistsException;
 import com.al3xkras.messenger.chat_service.exception.ChatNotFoundException;
 import com.al3xkras.messenger.chat_service.exception.ChatUserNotFoundException;
 import com.al3xkras.messenger.chat_service.exception.InvalidMessengerUserException;
 import com.al3xkras.messenger.chat_service.service.ChatService;
-import com.al3xkras.messenger.chat_service.service.ChatUserAlreadyExistsException;
+import com.al3xkras.messenger.chat_service.exception.ChatUserAlreadyExistsException;
+import com.al3xkras.messenger.dto.ChatDTO;
+import com.al3xkras.messenger.dto.ChatUserDTO;
+import com.al3xkras.messenger.dto.PageRequestDto;
+import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.ChatUser;
+import com.al3xkras.messenger.entity.MessengerUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

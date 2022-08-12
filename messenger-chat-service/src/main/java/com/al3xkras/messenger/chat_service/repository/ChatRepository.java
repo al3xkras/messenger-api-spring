@@ -1,6 +1,6 @@
 package com.al3xkras.messenger.chat_service.repository;
 
-import com.al3xkras.messenger.chat_service.entity.Chat;
+import com.al3xkras.messenger.entity.Chat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

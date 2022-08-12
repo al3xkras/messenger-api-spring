@@ -1,8 +1,8 @@
 package com.al3xkras.messenger.user_service.controller;
 
-import com.al3xkras.messenger.user_service.entity.MessengerUser;
+import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
-import com.al3xkras.messenger.user_service.dto.MessengerUserDTO;
+import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import lombok.extern.slf4j.Slf4j;

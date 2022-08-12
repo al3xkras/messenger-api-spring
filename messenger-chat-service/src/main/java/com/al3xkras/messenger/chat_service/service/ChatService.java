@@ -1,16 +1,13 @@
 package com.al3xkras.messenger.chat_service.service;
 
-import com.al3xkras.messenger.chat_service.entity.Chat;
-import com.al3xkras.messenger.chat_service.entity.MessengerUser;
-import com.al3xkras.messenger.chat_service.exception.ChatNameAlreadyExistsException;
-import com.al3xkras.messenger.chat_service.exception.ChatNotFoundException;
-import com.al3xkras.messenger.chat_service.exception.ChatUserNotFoundException;
-import com.al3xkras.messenger.chat_service.exception.InvalidMessengerUserException;
-import com.al3xkras.messenger.chat_service.model.ChatUserRole;
-import com.al3xkras.messenger.chat_service.entity.ChatUser;
-import com.al3xkras.messenger.chat_service.model.ChatUserId;
+import com.al3xkras.messenger.chat_service.exception.*;
 import com.al3xkras.messenger.chat_service.repository.ChatRepository;
 import com.al3xkras.messenger.chat_service.repository.ChatUserRepository;
+import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.ChatUser;
+import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.ChatUserId;
+import com.al3xkras.messenger.model.ChatUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.TransientPropertyValueException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +98,7 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatUser addChatUser(ChatUser chatUser) throws ChatUserAlreadyExistsException{
+    public ChatUser addChatUser(ChatUser chatUser) throws ChatUserAlreadyExistsException {
         ChatUser found = chatUserRepository.findById(new ChatUserId(chatUser.getChatId(),chatUser.getUserId()))
                 .orElse(null);
         if (found!=null) {

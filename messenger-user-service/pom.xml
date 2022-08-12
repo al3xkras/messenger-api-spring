@@ -63,6 +63,11 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 			<version>2.7.2</version>
 		</dependency>
+		<dependency>
+			<groupId>com.al3xkras</groupId>
+			<artifactId>MessengerProject</artifactId>
+			<version>1.0</version>
+		</dependency>
 
 	</dependencies>
 

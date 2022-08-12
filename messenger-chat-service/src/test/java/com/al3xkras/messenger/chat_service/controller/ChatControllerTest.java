@@ -1,12 +1,12 @@
 package com.al3xkras.messenger.chat_service.controller;
 
-import com.al3xkras.messenger.chat_service.dto.ChatDTO;
-import com.al3xkras.messenger.chat_service.dto.ChatUserDTO;
-import com.al3xkras.messenger.chat_service.dto.PageRequestDto;
-import com.al3xkras.messenger.chat_service.entity.Chat;
-import com.al3xkras.messenger.chat_service.entity.ChatUser;
-import com.al3xkras.messenger.chat_service.entity.MessengerUser;
-import com.al3xkras.messenger.chat_service.model.ChatUserRole;
+import com.al3xkras.messenger.dto.ChatDTO;
+import com.al3xkras.messenger.dto.ChatUserDTO;
+import com.al3xkras.messenger.dto.PageRequestDto;
+import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.ChatUser;
+import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.chat_service.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

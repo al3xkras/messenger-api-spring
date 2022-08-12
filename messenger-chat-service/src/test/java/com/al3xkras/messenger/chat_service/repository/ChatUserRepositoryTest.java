@@ -1,11 +1,11 @@
 package com.al3xkras.messenger.chat_service.repository;
 
-import com.al3xkras.messenger.chat_service.entity.Chat;
-import com.al3xkras.messenger.chat_service.entity.MessengerUser;
-import com.al3xkras.messenger.chat_service.model.ChatUserRole;
-import com.al3xkras.messenger.chat_service.model.MessengerUserType;
-import com.al3xkras.messenger.chat_service.entity.ChatUser;
-import com.al3xkras.messenger.chat_service.model.ChatUserId;
+import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.entity.ChatUser;
+import com.al3xkras.messenger.model.ChatUserId;
 import org.hibernate.TransientPropertyValueException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

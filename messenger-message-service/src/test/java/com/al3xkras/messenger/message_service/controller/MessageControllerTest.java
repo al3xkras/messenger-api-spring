@@ -1,8 +1,8 @@
 package com.al3xkras.messenger.message_service.controller;
 
 import com.al3xkras.messenger.message_service.service.MessageService;
-import com.al3xkras.messenger.message_service.dto.MessageDTO;
-import com.al3xkras.messenger.message_service.entity.ChatMessage;
+import com.al3xkras.messenger.dto.MessageDTO;
+import com.al3xkras.messenger.entity.ChatMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

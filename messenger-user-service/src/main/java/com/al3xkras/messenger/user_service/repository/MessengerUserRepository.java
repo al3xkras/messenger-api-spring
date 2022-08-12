@@ -1,6 +1,6 @@
 package com.al3xkras.messenger.user_service.repository;
 
-import com.al3xkras.messenger.user_service.entity.MessengerUser;
+import com.al3xkras.messenger.entity.MessengerUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

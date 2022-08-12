@@ -1,7 +1,7 @@
 package com.al3xkras.messenger.message_service.repository;
 
-import com.al3xkras.messenger.message_service.entity.ChatMessage;
-import com.al3xkras.messenger.message_service.model.ChatMessageId;
+import com.al3xkras.messenger.entity.ChatMessage;
+import com.al3xkras.messenger.model.ChatMessageId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

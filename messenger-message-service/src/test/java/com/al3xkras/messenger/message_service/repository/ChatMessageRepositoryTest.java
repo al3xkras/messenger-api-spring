@@ -1,7 +1,7 @@
 package com.al3xkras.messenger.message_service.repository;
 
-import com.al3xkras.messenger.message_service.entity.Chat;
-import com.al3xkras.messenger.message_service.entity.ChatMessage;
+import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
