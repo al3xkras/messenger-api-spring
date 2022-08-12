@@ -23,7 +23,7 @@ public class MessageDTO {
         this.message = message;
     }
 
-
+    public MessageDTO(){}
     @SuppressWarnings("all")
     public static class MessageDTOBuilder {
         @SuppressWarnings("all")

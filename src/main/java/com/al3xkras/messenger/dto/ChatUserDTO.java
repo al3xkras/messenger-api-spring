@@ -12,6 +12,7 @@ public class ChatUserDTO {
     @NotNull
     private ChatUserRole chatUserRole;
 
+    public ChatUserDTO(){}
     //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")
     ChatUserDTO(final Long chatId, final Long userId, final String title, final ChatUserRole chatUserRole) {

@@ -16,6 +16,24 @@
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
+
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>messenger</id>
+			<name>Messenger Releases</name>
+			<url>file:C:\Users\Александр\Desktop\MavenLocal</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>messenger</id>
+			<url>file:C:\Users\Александр\Desktop\MavenLocal</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

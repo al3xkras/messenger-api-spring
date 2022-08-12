@@ -14,6 +14,7 @@ public class ChatDTO {
     @NotNull
     private Long ownerId;
 
+    public ChatDTO(){}
     //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")
     ChatDTO(final Long chatId, final String chatName, final String displayName, final Long ownerId) {

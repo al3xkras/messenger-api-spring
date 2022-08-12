@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -102,7 +103,9 @@ class ChatControllerTest {
                 .username("user1")
                 .build();
 
-        Mockito.when(restTemplate.getForObject("/user/"+1L,MessengerUser.class))
+        URI uri = URI.create("http://localhost:10001/user/"+1L);
+
+        Mockito.when(restTemplate.getForObject(uri,MessengerUser.class))
                 .thenReturn(creator);
         Mockito.when(chatService.saveChat(chatToCreate,creator))
                 .thenReturn(chatCreated);
@@ -165,7 +168,7 @@ class ChatControllerTest {
         mockMvc.perform(put("/chat").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(chatDTOInvalid)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("please specify chat id of the chat to be modified"));
+                .andExpect(content().string("chat ID is null"));
 
         Chat chat = Chat.builder()
                 .chatId(chatDTO.getChatId())
@@ -214,13 +217,11 @@ class ChatControllerTest {
 
         mockMvc.perform(put("/chat/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(chatUserDTOInvalid)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("invalid chat DTO"));
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(put("/chat/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(chatUserDTOInvalid2)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("invalid chat DTO"));
+                .andExpect(status().isBadRequest());
 
     }
 }

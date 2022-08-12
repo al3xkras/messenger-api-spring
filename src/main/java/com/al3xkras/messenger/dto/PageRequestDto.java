@@ -4,6 +4,9 @@ public class PageRequestDto {
     private int page;
     private int size;
 
+    public PageRequestDto(){
+
+    }
     //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")
     public int getPage() {

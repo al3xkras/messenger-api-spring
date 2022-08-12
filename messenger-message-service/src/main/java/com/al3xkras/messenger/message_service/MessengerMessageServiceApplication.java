@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
+@EntityScan("com.al3xkras.messenger")
 public class MessengerMessageServiceApplication {
 
 	public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package com.al3xkras.messenger;
+package com.al3xkras.messenger.chat_service;
 
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
@@ -46,7 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@ActiveProfiles("test")
 class MessengerChatServiceApplicationTests {
 
 	@PersistenceContext

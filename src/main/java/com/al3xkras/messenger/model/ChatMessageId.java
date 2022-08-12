@@ -2,11 +2,29 @@ package com.al3xkras.messenger.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class ChatMessageId implements Serializable {
     private Long chatId;
     private Long userId;
     private LocalDateTime submissionDate;
+
+    public ChatMessageId(){
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChatMessageId that = (ChatMessageId) o;
+        return chatId.equals(that.chatId) && userId.equals(that.userId) && submissionDate.equals(that.submissionDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chatId, userId, submissionDate);
+    }
 
     //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")

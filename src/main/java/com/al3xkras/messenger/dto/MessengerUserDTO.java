@@ -30,6 +30,10 @@ public class MessengerUserDTO {
     @Enumerated(EnumType.STRING)
     private MessengerUserType messengerUserType;
 
+    public MessengerUserDTO(){
+
+    }
+
     //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")
     MessengerUserDTO(final String username, final String password, final String name, final String surname, final String email, final String phoneNumber, final MessengerUserType messengerUserType) {
