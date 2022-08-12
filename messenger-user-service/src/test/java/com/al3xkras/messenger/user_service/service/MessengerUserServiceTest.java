@@ -82,7 +82,7 @@ class MessengerUserServiceTest {
         Mockito.when(messengerUserRepository.findById(2L))
                 .thenReturn(Optional.of(secondUser));
 
-        Mockito.when(messengerUserRepository.save(updatedFirstUser)).
+        Mockito.when(messengerUserRepository.saveAndFlush(updatedFirstUser)).
                 thenAnswer(invocation->{
                     Mockito.when(messengerUserRepository.findByUsername("user1"))
                             .thenReturn(Optional.of(updatedFirstUser));
@@ -94,7 +94,7 @@ class MessengerUserServiceTest {
         Mockito.when(messengerUserRepository.findById(3L)).thenReturn(Optional.empty());
         Mockito.when(messengerUserRepository.findByUsername("user3")).thenReturn(Optional.empty());
 
-        Mockito.when(messengerUserRepository.save(userToSave))
+        Mockito.when(messengerUserRepository.saveAndFlush(userToSave))
                 .thenAnswer(invocationOnMock -> {
                     Mockito.when(messengerUserRepository.findByUsername("user3"))
                             .thenReturn(Optional.of(userToSaveWithId));
@@ -104,7 +104,7 @@ class MessengerUserServiceTest {
                 });
 
         DataIntegrityViolationException sqlIntegrity = new DataIntegrityViolationException("username");
-        Mockito.when(messengerUserRepository.save(userWithExistingUsername))
+        Mockito.when(messengerUserRepository.saveAndFlush(userWithExistingUsername))
                 .thenThrow(sqlIntegrity);
     }
 

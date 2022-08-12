@@ -33,16 +33,16 @@ class MessengerUserControllerTest {
             .username("user1")
             .name("Max")
             .emailAddress("max@gmail.com")
-            .phoneNumber("111-22-33")
+            .phoneNumber("+34 111-22-33")
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
 
-    String firstUserJSON = "{\"messengerUserId\":1,\"username\":\"user1\",\"name\":\"Max\",\"surname\":null,\"emailAddress\":\"max@gmail.com\",\"phoneNumber\":\"111-22-33\",\"messengerUserType\":\"ADMIN\"}";
-
     MessengerUserDTO updatedFirstUserDTO = MessengerUserDTO.builder()
             .username("user1")
+            .name(firstUser.getName())
             .email("maxim@gmail.com")
-            .phoneNumber("111-22-33")
+            .phoneNumber("+22 111-22-33")
+            .password("Password123.")
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
     MessengerUser firstUserUpdate = MessengerUser.builder()
@@ -77,7 +77,7 @@ class MessengerUserControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/user/1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.content().json(firstUserJSON));
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(firstUser)));
     }
 
     @Test
@@ -95,7 +95,7 @@ class MessengerUserControllerTest {
                 .thenReturn(firstUser);
         mockMvc.perform(MockMvcRequestBuilders.get("/user").param("username","user1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(firstUserJSON));
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(firstUser)));
     }
 
     @Test
@@ -118,10 +118,10 @@ class MessengerUserControllerTest {
 
         MessengerUserDTO pojo = MessengerUserDTO.builder()
                 .username("user3")
-                .password("password123")
+                .password("Password.123")
                 .name("Michael")
                 .surname("Jackson")
-                .phoneNumber("123-45-67")
+                .phoneNumber("+9 123-45-67")
                 .messengerUserType(MessengerUserType.USER)
                 .build();
 

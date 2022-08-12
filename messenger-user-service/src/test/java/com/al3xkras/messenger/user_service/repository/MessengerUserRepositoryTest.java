@@ -15,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 
 @Slf4j
 @DataJpaTest
@@ -28,7 +30,6 @@ class MessengerUserRepositoryTest {
     private MessengerUserRepository messengerUserRepository;
 
     static MessengerUser firstUser = MessengerUser.builder()
-            .messengerUserId(1L)
             .username("user1")
             .name("Max")
             .emailAddress("max@gmail.com")
@@ -36,21 +37,13 @@ class MessengerUserRepositoryTest {
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
     static MessengerUser secondUser = MessengerUser.builder()
-            .messengerUserId(2L)
             .username("user2")
             .name("Den")
             .emailAddress("d3en@gmail.com")
             .phoneNumber("111-22-73")
             .messengerUserType(MessengerUserType.USER)
             .build();
-    static MessengerUser updatedFirstUser = MessengerUser.builder()
-            .messengerUserId(1L)
-            .username("user1")
-            .name("Maxim")
-            .emailAddress("maxim@gmail.com")
-            .phoneNumber("111-22-33")
-            .messengerUserType(MessengerUserType.ADMIN)
-            .build();
+    static MessengerUser updatedFirstUser;
 
     static MessengerUser userToSave = MessengerUser.builder()
             .username("user3")
@@ -68,66 +61,83 @@ class MessengerUserRepositoryTest {
             .messengerUserType(MessengerUserType.USER)
             .build();
 
+    void init(){
+        updatedFirstUser = MessengerUser.builder()
+                .messengerUserId(firstUser.getMessengerUserId())
+                .username("user1")
+                .name("Maxim")
+                .emailAddress("maxim@gmail.com")
+                .phoneNumber("111-22-33")
+                .messengerUserType(MessengerUserType.ADMIN)
+                .build();
+    }
 
     @BeforeEach
     void setUp() {
-        messengerUserRepository.save(firstUser);
-        messengerUserRepository.save(secondUser);
+        firstUser.setMessengerUserId(null);
+        secondUser.setMessengerUserId(null);
+        entityManager.persist(firstUser);
+        entityManager.persist(secondUser);
+        init();
     }
 
     @Test
     void whenFindExistingUser_thenReturn(){
-        Assertions.assertEquals(firstUser,messengerUserRepository.findById(1L).orElse(null));
-        Assertions.assertEquals(firstUser,messengerUserRepository.findByUsername("user1").orElse(null));
-        Assertions.assertEquals(secondUser,messengerUserRepository.findById(2L).orElse(null));
-        Assertions.assertEquals(secondUser,messengerUserRepository.findByUsername("user2").orElse(null));
+        assertEquals(firstUser,messengerUserRepository.findById(firstUser.getMessengerUserId()).orElse(null));
+        assertEquals(firstUser,messengerUserRepository.findByUsername(firstUser.getUsername()).orElse(null));
+        assertEquals(secondUser,messengerUserRepository.findById(secondUser.getMessengerUserId()).orElse(null));
+        assertEquals(secondUser,messengerUserRepository.findByUsername(secondUser.getUsername()).orElse(null));
     }
 
     @Test
     void whenFindUserThatDoesNotExist_thenReturnOptionalEmpty(){
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findById(3L));
-        Assertions.assertEquals(Optional.empty(), messengerUserRepository.findByUsername("user3"));
+        assertEquals(Optional.empty(),messengerUserRepository.findById(3L));
+        assertEquals(Optional.empty(), messengerUserRepository.findByUsername("user3"));
     }
 
     @Test
     void whenSaveNewUser_thenReturnNewUserWithId(){
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findById(3L));
-        Assertions.assertEquals(userToSaveWithId,messengerUserRepository.save(userToSave));
-        Assertions.assertEquals(userToSaveWithId,messengerUserRepository.findById(3L).orElse(null));
-        Assertions.assertEquals(userToSaveWithId,messengerUserRepository.findByUsername("user3").orElse(null));
+        userToSaveWithId = messengerUserRepository.save(userToSave);
+        Long id = userToSaveWithId.getMessengerUserId();
+        userToSaveWithId.setMessengerUserId(null);
+        assertEquals(userToSaveWithId,userToSave);
+        assertNotNull(id);
+        userToSaveWithId.setMessengerUserId(id);
+        assertEquals(userToSaveWithId,messengerUserRepository.findById(userToSave.getMessengerUserId()).orElse(null));
+        assertEquals(userToSaveWithId,messengerUserRepository.findByUsername("user3").orElse(null));
     }
 
     @Test
     void whenSaveExistingUser_thenReturnUpdatedUser(){
-        Assertions.assertEquals(firstUser,messengerUserRepository.findById(1L).orElse(null));
+        assertEquals(firstUser,messengerUserRepository.findById(firstUser.getMessengerUserId()).orElse(null));
         messengerUserRepository.save(updatedFirstUser);
-        Assertions.assertEquals(updatedFirstUser,messengerUserRepository.findById(1L).orElse(null));
+        assertEquals(updatedFirstUser,messengerUserRepository.findById(firstUser.getMessengerUserId()).orElse(null));
     }
 
     @Test
     void whenSaveUserWithExistingUsername_thenThrowSqlIntegrity(){
-        Assertions.assertEquals(firstUser,messengerUserRepository.findByUsername("user1").orElse(null));
+        assertEquals(firstUser,messengerUserRepository.findByUsername("user1").orElse(null));
 
-        Assertions.assertThrows(DataIntegrityViolationException.class,()->{
+        assertThrows(DataIntegrityViolationException.class,()->{
             messengerUserRepository.saveAndFlush(MessengerUser.builder().username("user1").messengerUserType(MessengerUserType.USER).build());
         });
     }
 
     @Test
     void whenDeleteExisting_thenDelete(){
-        Assertions.assertEquals(firstUser,messengerUserRepository.findById(1L).orElse(null));
-        Assertions.assertEquals(firstUser,messengerUserRepository.findByUsername("user1").orElse(null));
-        messengerUserRepository.deleteById(1L);
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findById(1L));
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findByUsername("user1"));
+        assertEquals(firstUser,messengerUserRepository.findById(firstUser.getMessengerUserId()).orElse(null));
+        assertEquals(firstUser,messengerUserRepository.findByUsername(firstUser.getUsername()).orElse(null));
+        messengerUserRepository.deleteById(firstUser.getMessengerUserId());
+        assertEquals(Optional.empty(),messengerUserRepository.findById(firstUser.getMessengerUserId()));
+        assertEquals(Optional.empty(),messengerUserRepository.findByUsername(firstUser.getUsername()));
     }
 
     @Test
     void whenDeleteUserThatDoesNotExist_thenExpectException(){
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findById(3L));
-        Assertions.assertEquals(Optional.empty(),messengerUserRepository.findByUsername("user3"));
-        Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
-            messengerUserRepository.deleteById(3L);
+        assertEquals(Optional.empty(),messengerUserRepository.findById(365L));
+        assertEquals(Optional.empty(),messengerUserRepository.findByUsername("user3"));
+        assertThrows(EmptyResultDataAccessException.class,()->{
+            messengerUserRepository.deleteById(365L);
         });
     }
 
