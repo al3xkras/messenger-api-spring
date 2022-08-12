@@ -17,6 +17,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 
 @DataJpaTest
+@ActiveProfiles("test")
 class ChatUserRepositoryTest {
 
     @Autowired

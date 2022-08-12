@@ -11,12 +11,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 
 @Slf4j
 @DataJpaTest
+@ActiveProfiles("test")
 class MessengerUserRepositoryTest {
 
     @Autowired
