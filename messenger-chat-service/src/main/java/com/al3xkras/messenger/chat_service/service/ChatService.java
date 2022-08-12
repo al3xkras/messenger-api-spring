@@ -19,8 +19,11 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
 
 @Slf4j
 @Service
@@ -62,8 +65,8 @@ public class ChatService {
             return saved;
         } catch (DataIntegrityViolationException e){
             throw new ChatNameAlreadyExistsException(chat.getChatName());
-        } catch (InvalidDataAccessApiUsageException e){
-            if (e.getCause().getCause() instanceof TransientPropertyValueException){
+        } catch (InvalidDataAccessApiUsageException | JpaObjectRetrievalFailureException e){
+            if (e.getCause() instanceof EntityNotFoundException || e.getCause().getCause() instanceof TransientPropertyValueException){
                 throw new InvalidMessengerUserException("messenger user with id "+creator.getMessengerUserId()+" not found");
             } else {
                 throw e;

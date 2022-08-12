@@ -97,11 +97,55 @@ class ChatRepositoryTest {
             .chatUserRole(ChatUserRole.USER)
             .build();
 
+    void init(){
+        firstChat = Chat.builder()
+                .chatName("first_chat")
+                .chatDisplayName("First Chat!")
+                .build();
+        secondChat = Chat.builder()
+                .chatName("second_chat")
+                .chatDisplayName("Second Chat!")
+                .build();
+
+         chatUser11 = ChatUser.builder()
+                .chat(firstChat)
+                .messengerUser(firstUser)
+                .title("Admin of chat 1")
+                .chatUserRole(ChatUserRole.ADMIN)
+                .build();
+         chatUser12 = ChatUser.builder()
+                .chat(firstChat)
+                .messengerUser(secondUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+         chatUser21 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(thirdUser)
+                .title("Admin of chat 2")
+                .chatUserRole(ChatUserRole.ADMIN)
+                .build();
+         chatUser22 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(firstUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+         chatUser23 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(secondUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+    }
+
     @BeforeEach
     void beforeEach(){
+        firstUser.setMessengerUserId(null);
+        secondUser.setMessengerUserId(null);
+        thirdUser.setMessengerUserId(null);
         entityManager.persist(firstUser);
         entityManager.persist(secondUser);
         entityManager.persist(thirdUser);
+
+        init();
 
         entityManager.persist(firstChat);
         entityManager.persist(secondChat);

@@ -17,12 +17,13 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.test.context.ActiveProfiles;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @DataJpaTest
@@ -33,10 +34,9 @@ class ChatUserRepositoryTest {
     private ChatUserRepository chatUserRepository;
 
     @Autowired
-    private TestEntityManager testEntityManager;
+    private TestEntityManager entityManager;
 
     static MessengerUser firstUser = MessengerUser.builder()
-            .messengerUserId(1L)
             .username("user1")
             .name("Max")
             .emailAddress("max@gmail.com")
@@ -44,7 +44,6 @@ class ChatUserRepositoryTest {
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
     static MessengerUser secondUser = MessengerUser.builder()
-            .messengerUserId(2L)
             .username("user2")
             .name("Andrew")
             .emailAddress("andrew@gmail.com")
@@ -52,7 +51,6 @@ class ChatUserRepositoryTest {
             .messengerUserType(MessengerUserType.USER)
             .build();
     static MessengerUser thirdUser = MessengerUser.builder()
-            .messengerUserId(3L)
             .username("user3")
             .name("Mike")
             .emailAddress("mike@gmail.com")
@@ -102,19 +100,63 @@ class ChatUserRepositoryTest {
             .chatUserRole(ChatUserRole.USER)
             .build();
 
+    void init(){
+        firstChat = Chat.builder()
+                .chatName("first_chat")
+                .chatDisplayName("First Chat!")
+                .build();
+        secondChat = Chat.builder()
+                .chatName("second_chat")
+                .chatDisplayName("Second Chat!")
+                .build();
+
+        chatUser11 = ChatUser.builder()
+                .chat(firstChat)
+                .messengerUser(firstUser)
+                .title("Admin of chat 1")
+                .chatUserRole(ChatUserRole.ADMIN)
+                .build();
+        chatUser12 = ChatUser.builder()
+                .chat(firstChat)
+                .messengerUser(secondUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+        chatUser21 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(thirdUser)
+                .title("Admin of chat 2")
+                .chatUserRole(ChatUserRole.ADMIN)
+                .build();
+        chatUser22 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(firstUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+        chatUser23 = ChatUser.builder()
+                .chat(secondChat)
+                .messengerUser(secondUser)
+                .chatUserRole(ChatUserRole.USER)
+                .build();
+    }
+
     @BeforeEach
     void beforeEach(){
-        testEntityManager.persist(firstUser);
-        testEntityManager.persist(secondUser);
-        testEntityManager.persist(thirdUser);
+        firstUser.setMessengerUserId(null);
+        secondUser.setMessengerUserId(null);
+        thirdUser.setMessengerUserId(null);
+        entityManager.persist(firstUser);
+        entityManager.persist(secondUser);
+        entityManager.persist(thirdUser);
 
-        testEntityManager.persist(firstChat);
-        testEntityManager.persist(secondChat);
+        init();
 
-        testEntityManager.persist(chatUser11);
-        testEntityManager.persist(chatUser12);
-        testEntityManager.persist(chatUser21);
-        testEntityManager.persist(chatUser22);
+        entityManager.persist(firstChat);
+        entityManager.persist(secondChat);
+
+        entityManager.persist(chatUser11);
+        entityManager.persist(chatUser12);
+        entityManager.persist(chatUser21);
+        entityManager.persist(chatUser22);
     }
 
     @Test
@@ -178,7 +220,7 @@ class ChatUserRepositoryTest {
         assertEquals(firstUser,chatUsersOfFirstChat.get(0).getMessengerUser());
 
         MessengerUser firstUserModified = MessengerUser.builder()
-                .messengerUserId(1L)
+                .messengerUserId(firstUser.getMessengerUserId())
                 .username("user1")
                 .name("Modified")
                 .emailAddress("mod@gmail.com")
@@ -186,8 +228,7 @@ class ChatUserRepositoryTest {
                 .messengerUserType(MessengerUserType.ADMIN)
                 .build();
 
-        testEntityManager.remove(firstUser);
-        testEntityManager.persist(firstUserModified);
+        entityManager.merge(firstUserModified);
 
         chatUsersOfFirstChat = chatUserRepository.findAllByChatId(firstChat.getChatId(),
                 firstPageOfSize1).toList();
@@ -200,7 +241,7 @@ class ChatUserRepositoryTest {
     @Test
     void whenSaveChatUserWithInvalidMessengerUser_thenThrowInvalidDataAccessApiUsageException(){
         MessengerUser notPersisted = MessengerUser.builder()
-                .messengerUserId(4L)
+                .messengerUserId(4000L)
                 .username("user4")
                 .name("Mike")
                 .emailAddress("mike@gmail.com")
@@ -215,8 +256,8 @@ class ChatUserRepositoryTest {
         try {
             chatUserRepository.saveAndFlush(chatUser);
             throw new RuntimeException();
-        } catch (InvalidDataAccessApiUsageException e){
-            assertInstanceOf(TransientPropertyValueException.class,e.getCause().getCause());
+        } catch (InvalidDataAccessApiUsageException | JpaObjectRetrievalFailureException e){
+            assertTrue(e.getCause() instanceof EntityNotFoundException || e.getCause().getCause() instanceof TransientPropertyValueException);
         }
     }
 
