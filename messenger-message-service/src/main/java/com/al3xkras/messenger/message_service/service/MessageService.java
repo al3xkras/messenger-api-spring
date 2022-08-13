@@ -1,21 +1,34 @@
 package com.al3xkras.messenger.message_service.service;
 
 import com.al3xkras.messenger.entity.ChatMessage;
+import com.al3xkras.messenger.entity.ChatUser;
+import com.al3xkras.messenger.message_service.exception.ChatMessageAlreadyExistsException;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
 import com.al3xkras.messenger.model.ChatMessageId;
 import com.al3xkras.messenger.message_service.repository.ChatMessageRepository;
+import com.al3xkras.messenger.model.ChatUserId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 @Service
 public class MessageService {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public ChatMessage saveMessage(ChatMessage chatMessage) {
+    @Transactional
+    public ChatMessage saveMessage(ChatMessage chatMessage) throws ChatMessageAlreadyExistsException {
+        ChatMessageId id = new ChatMessageId(chatMessage.getChatId(),chatMessage.getUserId(),chatMessage.getSubmissionDate());
+        if (chatMessageRepository.findById(id).isPresent())
+            throw new ChatMessageAlreadyExistsException();
         return chatMessageRepository.saveAndFlush(chatMessage);
     }
 
@@ -40,7 +53,18 @@ public class MessageService {
         return chatMessageRepository.saveAndFlush(updated);
     }
 
-    public void deleteMessage(ChatMessage chatMessage) {
-        chatMessageRepository.delete(chatMessage);
+    public void deleteMessage(ChatMessageId id)
+            throws ChatMessageNotFoundException{
+        try {
+            chatMessageRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e){
+            throw new ChatMessageNotFoundException();
+        }
+    }
+
+    public ChatMessage findById(ChatMessageId chatMessageId)
+            throws ChatMessageNotFoundException {
+        return chatMessageRepository.findById(chatMessageId)
+                .orElseThrow(ChatMessageNotFoundException::new);
     }
 }
