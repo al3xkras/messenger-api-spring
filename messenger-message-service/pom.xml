@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.al3xkras</groupId>
 	<artifactId>messenger-message-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<name>messenger-message-service</name>
 	<description>messenger-message-service</description>
 	<properties>
@@ -60,7 +60,7 @@
 		<dependency>
 			<groupId>com.al3xkras</groupId>
 			<artifactId>MessengerProject</artifactId>
-			<version>1.1</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
