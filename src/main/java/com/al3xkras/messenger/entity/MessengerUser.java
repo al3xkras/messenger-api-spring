@@ -10,29 +10,32 @@ public class MessengerUser {
     @SequenceGenerator(name = "messenger_user_seq", sequenceName = "messenger_user_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "messenger_user_seq")
     @Column(name = "messenger_user_id", nullable = false)
-    public Long messengerUserId;
-    @Column(name = "username", columnDefinition = "nvarchar(15)", nullable = false)
-    public String username;
-    @Column(name = "name", columnDefinition = "varchar(25)", nullable = false)
-    public String name;
-    @Column(name = "surname", columnDefinition = "varchar(25)")
-    public String surname;
+    private Long messengerUserId;
+    @Column(name = "username", columnDefinition = "varchar(15)", nullable = false)
+    private String username;
+    @Column(name = "password", columnDefinition = "nvarchar(255)")
+    private String password;
+    @Column(name = "name", columnDefinition = "nvarchar(25)", nullable = false)
+    private String name;
+    @Column(name = "surname", columnDefinition = "nvarchar(25)")
+    private String surname;
     @Column(name = "email_address")
-    public String emailAddress;
+    private String emailAddress;
     @Column(name = "phone_number")
-    public String phoneNumber;
+    private String phoneNumber;
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
-    public MessengerUserType messengerUserType;
+    private MessengerUserType messengerUserType;
 
 
-    //<editor-fold defaultstate="collapsed" desc="delombok">
     @SuppressWarnings("all")
     public static class MessengerUserBuilder {
         @SuppressWarnings("all")
         private Long messengerUserId;
         @SuppressWarnings("all")
         private String username;
+        @SuppressWarnings("all")
+        private String password;
         @SuppressWarnings("all")
         private String name;
         @SuppressWarnings("all")
@@ -57,6 +60,12 @@ public class MessengerUser {
         @SuppressWarnings("all")
         public MessengerUser.MessengerUserBuilder username(final String username) {
             this.username = username;
+            return this;
+        }
+
+        @SuppressWarnings("all")
+        public MessengerUser.MessengerUserBuilder password(final String password) {
+            this.password = password;
             return this;
         }
 
@@ -92,13 +101,13 @@ public class MessengerUser {
 
         @SuppressWarnings("all")
         public MessengerUser build() {
-            return new MessengerUser(this.messengerUserId, this.username, this.name, this.surname, this.emailAddress, this.phoneNumber, this.messengerUserType);
+            return new MessengerUser(this.messengerUserId, this.username, this.password, this.name, this.surname, this.emailAddress, this.phoneNumber, this.messengerUserType);
         }
 
         @Override
         @SuppressWarnings("all")
         public String toString() {
-            return "MessengerUser.MessengerUserBuilder(messengerUserId=" + this.messengerUserId + ", username=" + this.username + ", name=" + this.name + ", surname=" + this.surname + ", emailAddress=" + this.emailAddress + ", phoneNumber=" + this.phoneNumber + ", messengerUserType=" + this.messengerUserType + ")";
+            return "MessengerUser.MessengerUserBuilder(messengerUserId=" + this.messengerUserId + ", username=" + this.username + ", password=" + this.password + ", name=" + this.name + ", surname=" + this.surname + ", emailAddress=" + this.emailAddress + ", phoneNumber=" + this.phoneNumber + ", messengerUserType=" + this.messengerUserType + ")";
         }
     }
 
@@ -115,6 +124,11 @@ public class MessengerUser {
     @SuppressWarnings("all")
     public String getUsername() {
         return this.username;
+    }
+
+    @SuppressWarnings("all")
+    public String getPassword() {
+        return this.password;
     }
 
     @SuppressWarnings("all")
@@ -153,6 +167,11 @@ public class MessengerUser {
     }
 
     @SuppressWarnings("all")
+    public void setPassword(final String password) {
+        this.password = password;
+    }
+
+    @SuppressWarnings("all")
     public void setName(final String name) {
         this.name = name;
     }
@@ -179,27 +198,6 @@ public class MessengerUser {
 
     @Override
     @SuppressWarnings("all")
-    public String toString() {
-        return "MessengerUser(messengerUserId=" + this.getMessengerUserId() + ", username=" + this.getUsername() + ", name=" + this.getName() + ", surname=" + this.getSurname() + ", emailAddress=" + this.getEmailAddress() + ", phoneNumber=" + this.getPhoneNumber() + ", messengerUserType=" + this.getMessengerUserType() + ")";
-    }
-
-    @SuppressWarnings("all")
-    public MessengerUser(final Long messengerUserId, final String username, final String name, final String surname, final String emailAddress, final String phoneNumber, final MessengerUserType messengerUserType) {
-        this.messengerUserId = messengerUserId;
-        this.username = username;
-        this.name = name;
-        this.surname = surname;
-        this.emailAddress = emailAddress;
-        this.phoneNumber = phoneNumber;
-        this.messengerUserType = messengerUserType;
-    }
-
-    @SuppressWarnings("all")
-    public MessengerUser() {
-    }
-
-    @Override
-    @SuppressWarnings("all")
     public boolean equals(final Object o) {
         if (o == this) return true;
         if (!(o instanceof MessengerUser)) return false;
@@ -211,6 +209,9 @@ public class MessengerUser {
         final Object this$username = this.getUsername();
         final Object other$username = other.getUsername();
         if (this$username == null ? other$username != null : !this$username.equals(other$username)) return false;
+        final Object this$password = this.getPassword();
+        final Object other$password = other.getPassword();
+        if (this$password == null ? other$password != null : !this$password.equals(other$password)) return false;
         final Object this$name = this.getName();
         final Object other$name = other.getName();
         if (this$name == null ? other$name != null : !this$name.equals(other$name)) return false;
@@ -243,6 +244,8 @@ public class MessengerUser {
         result = result * PRIME + ($messengerUserId == null ? 43 : $messengerUserId.hashCode());
         final Object $username = this.getUsername();
         result = result * PRIME + ($username == null ? 43 : $username.hashCode());
+        final Object $password = this.getPassword();
+        result = result * PRIME + ($password == null ? 43 : $password.hashCode());
         final Object $name = this.getName();
         result = result * PRIME + ($name == null ? 43 : $name.hashCode());
         final Object $surname = this.getSurname();
@@ -255,5 +258,26 @@ public class MessengerUser {
         result = result * PRIME + ($messengerUserType == null ? 43 : $messengerUserType.hashCode());
         return result;
     }
-    //</editor-fold>
+
+    @Override
+    @SuppressWarnings("all")
+    public String toString() {
+        return "MessengerUser(messengerUserId=" + this.getMessengerUserId() + ", username=" + this.getUsername() + ", password=" + this.getPassword() + ", name=" + this.getName() + ", surname=" + this.getSurname() + ", emailAddress=" + this.getEmailAddress() + ", phoneNumber=" + this.getPhoneNumber() + ", messengerUserType=" + this.getMessengerUserType() + ")";
+    }
+
+    @SuppressWarnings("all")
+    public MessengerUser() {
+    }
+
+    @SuppressWarnings("all")
+    public MessengerUser(final Long messengerUserId, final String username, final String password, final String name, final String surname, final String emailAddress, final String phoneNumber, final MessengerUserType messengerUserType) {
+        this.messengerUserId = messengerUserId;
+        this.username = username;
+        this.password = password;
+        this.name = name;
+        this.surname = surname;
+        this.emailAddress = emailAddress;
+        this.phoneNumber = phoneNumber;
+        this.messengerUserType = messengerUserType;
+    }
 }

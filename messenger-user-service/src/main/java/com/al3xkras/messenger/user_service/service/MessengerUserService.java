@@ -10,22 +10,27 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MessengerUserService {
 
     @Autowired
-    public MessengerUserRepository messengerUserRepository;
+    private MessengerUserRepository messengerUserRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public MessengerUser findMessengerUserById(Long userId) throws MessengerUserNotFoundException{
         return messengerUserRepository.findById(userId)
                 .orElseThrow(MessengerUserNotFoundException::new);
     }
 
-    public MessengerUser findMessengerUserByUsername(String username) {
+    public MessengerUser findMessengerUserByUsername(String username) throws MessengerUserNotFoundException{
         return messengerUserRepository.findByUsername(username)
                 .orElseThrow(MessengerUserNotFoundException::new);
     }
@@ -33,6 +38,7 @@ public class MessengerUserService {
     public MessengerUser saveUser(MessengerUser messengerUser) throws MessengerUserAlreadyExistsException{
         try {
             messengerUser.setMessengerUserId(null);
+            messengerUser.setPassword(passwordEncoder.encode(messengerUser.getPassword()));
             return messengerUserRepository.saveAndFlush(messengerUser);
         } catch (DataIntegrityViolationException e){
             throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());

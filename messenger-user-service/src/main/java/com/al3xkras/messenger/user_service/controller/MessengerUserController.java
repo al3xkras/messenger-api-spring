@@ -54,6 +54,7 @@ public class MessengerUserController {
     public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDto.getUsername())
+                .password(messengerUserDto.getPassword())
                 .name(messengerUserDto.getName())
                 .surname(messengerUserDto.getSurname())
                 .emailAddress(messengerUserDto.getEmail())
