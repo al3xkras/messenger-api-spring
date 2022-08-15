@@ -268,10 +268,25 @@ class MessengerUserControllerTest {
         Mockito.doNothing()
                 .when(messengerUserService).deleteByUsername(firstUser.getUsername());
 
+        Mockito.when(messengerUserService.getUserTypeById(firstUser.getMessengerUserId()))
+                        .thenReturn(MessengerUserType.USER);
+        Mockito.when(messengerUserService.getUserTypeByUsername(firstUser.getUsername()))
+                .thenReturn(MessengerUserType.USER);
+
         mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("username",firstUser.getUsername()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.when(messengerUserService.getUserTypeById(firstUser.getMessengerUserId()))
+                .thenReturn(MessengerUserType.ADMIN);
+        Mockito.when(messengerUserService.getUserTypeByUsername(firstUser.getUsername()))
+                .thenReturn(MessengerUserType.ADMIN);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("username",firstUser.getUsername()))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
@@ -280,6 +295,11 @@ class MessengerUserControllerTest {
                 .when(messengerUserService).deleteById(firstUser.getMessengerUserId());
         Mockito.doThrow(MessengerUserNotFoundException.class)
                 .when(messengerUserService).deleteByUsername(firstUser.getUsername());
+
+        Mockito.when(messengerUserService.getUserTypeById(firstUser.getMessengerUserId()))
+                .thenThrow(MessengerUserNotFoundException.class);
+        Mockito.when(messengerUserService.getUserTypeByUsername(firstUser.getUsername()))
+                .thenThrow(MessengerUserNotFoundException.class);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())

@@ -37,7 +37,8 @@ public class MessengerUserService {
     public MessengerUser saveUser(MessengerUser messengerUser) throws MessengerUserAlreadyExistsException{
         try {
             messengerUser.setMessengerUserId(null);
-            messengerUser.setPassword(passwordEncoder.encode(messengerUser.getPassword()));
+            if (messengerUser.getPassword()!=null)
+                messengerUser.setPassword(passwordEncoder.encode(messengerUser.getPassword()));
             return messengerUserRepository.saveAndFlush(messengerUser);
         } catch (DataIntegrityViolationException e){
             throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());

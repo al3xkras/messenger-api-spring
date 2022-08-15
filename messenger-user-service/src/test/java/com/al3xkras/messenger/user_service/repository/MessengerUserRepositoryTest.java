@@ -31,6 +31,7 @@ class MessengerUserRepositoryTest {
 
     static MessengerUser firstUser = MessengerUser.builder()
             .username("user1")
+            .password("Password123.")
             .name("Max")
             .emailAddress("max@gmail.com")
             .phoneNumber("111-22-33")
@@ -38,6 +39,7 @@ class MessengerUserRepositoryTest {
             .build();
     static MessengerUser secondUser = MessengerUser.builder()
             .username("user2")
+            .password("Password123.")
             .name("Den")
             .emailAddress("d3en@gmail.com")
             .phoneNumber("111-22-73")
@@ -47,6 +49,7 @@ class MessengerUserRepositoryTest {
 
     static MessengerUser userToSave = MessengerUser.builder()
             .username("user3")
+            .password("Password123.")
             .name("Jake")
             .emailAddress("jak3@gmail.com")
             .phoneNumber("111-45376-73")
@@ -55,6 +58,7 @@ class MessengerUserRepositoryTest {
     static MessengerUser userToSaveWithId = MessengerUser.builder()
             .messengerUserId(3L)
             .username("user3")
+            .password("Password123.")
             .name("Jake")
             .emailAddress("jak3@gmail.com")
             .phoneNumber("111-45376-73")
@@ -65,6 +69,7 @@ class MessengerUserRepositoryTest {
         updatedFirstUser = MessengerUser.builder()
                 .messengerUserId(firstUser.getMessengerUserId())
                 .username("user1")
+                .password("Password123.")
                 .name("Maxim")
                 .emailAddress("maxim@gmail.com")
                 .phoneNumber("111-22-33")
