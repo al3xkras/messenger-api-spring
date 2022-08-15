@@ -13,7 +13,7 @@ public class MessengerUser {
     private Long messengerUserId;
     @Column(name = "username", columnDefinition = "varchar(15)", nullable = false)
     private String username;
-    @Column(name = "password", columnDefinition = "nvarchar(255)")
+    @Column(name = "password", columnDefinition = "nvarchar(255)", nullable = false)
     private String password;
     @Column(name = "name", columnDefinition = "nvarchar(25)", nullable = false)
     private String name;

@@ -63,7 +63,7 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
         //TODO remove hardcode
-        response.setHeader("access_token",accessToken);
-        response.setHeader("refresh_token",refreshToken);
+        response.setHeader("access-token",accessToken);
+        response.setHeader("refresh-token",refreshToken);
     }
 }

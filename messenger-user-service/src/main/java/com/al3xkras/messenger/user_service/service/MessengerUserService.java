@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.user_service.service;
 
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.repository.MessengerUserRepository;
@@ -10,11 +11,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -54,6 +53,7 @@ public class MessengerUserService {
         MessengerUser updated = MessengerUser.builder()
                 .messengerUserId(messengerUser.getMessengerUserId())
                 .username(messengerUser.getUsername()==null?beforeUpdate.getUsername():messengerUser.getUsername())
+                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():messengerUser.getPassword())
                 .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
                 .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
                 .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
@@ -76,6 +76,7 @@ public class MessengerUserService {
         MessengerUser updated = MessengerUser.builder()
                 .messengerUserId(beforeUpdate.getMessengerUserId())
                 .username(messengerUser.getUsername())
+                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():messengerUser.getPassword())
                 .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
                 .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
                 .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
@@ -102,5 +103,15 @@ public class MessengerUserService {
         MessengerUser existing = messengerUserRepository.findByUsername(username)
                         .orElseThrow(MessengerUserNotFoundException::new);
         messengerUserRepository.deleteById(existing.getMessengerUserId());
+    }
+
+    public MessengerUserType getUserTypeById(Long messengerUserId) throws MessengerUserNotFoundException {
+        return messengerUserRepository.getUserTypeById(messengerUserId)
+                .orElseThrow(MessengerUserNotFoundException::new);
+    }
+
+    public MessengerUserType getUserTypeByUsername(String username) throws MessengerUserNotFoundException {
+        return messengerUserRepository.getUserTypeByUsername(username)
+                .orElseThrow(MessengerUserNotFoundException::new);
     }
 }

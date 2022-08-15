@@ -8,6 +8,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,11 +29,15 @@ import java.util.stream.Collectors;
 public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String servletPath = request.getServletPath();
-        if (servletPath.equals("/user/login")){
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/user/login") ||
+                (request.getMethod().equalsIgnoreCase("post") && requestURI.equals("/user"))){
+            log.info("authorization filter ignored");
             filterChain.doFilter(request, response);
             return;
         }
+
+        log.info("authorization filter NOT ignored");
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader==null){
             response.sendError(HttpStatus.FORBIDDEN.value());
@@ -58,11 +63,40 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                if (servletPath.matches("^/user/\\d{1,20}$") &&
-                        !authorities.contains(new SimpleGrantedAuthority(MessengerUserType.ADMIN.name())) &&
-                        Long.parseLong(servletPath.substring("/user/".length()))!=id){
-                    response.sendError(HttpStatus.FORBIDDEN.value());
+                if (requestURI.startsWith("/user") && !authorities.contains(new SimpleGrantedAuthority(MessengerUserType.ADMIN.name()))){
+                    if (request.getMethod().equalsIgnoreCase("get") && requestURI.equals("/user")){
+                        String usernameParam = request.getParameter("username");
+                        if (usernameParam==null){
+                            response.getWriter().write("\"username\" param is not specified");
+                            response.sendError(HttpStatus.BAD_REQUEST.value());
+                            return;
+                        }
+                        if (!usernameParam.equals(username)){
+                            response.sendError(HttpStatus.FORBIDDEN.value());
+                            return;
+                        }
+                    }
+                    if ((request.getMethod().equalsIgnoreCase("put") || request.getMethod().equalsIgnoreCase("delete")) &&
+                            requestURI.equals("/user")){
+
+                        String userIdParam = request.getParameter("user-id");
+                        String usernameParam = request.getParameter("username");
+                        if (userIdParam!=null && Long.parseLong(userIdParam)!=id){
+                            response.sendError(HttpStatus.FORBIDDEN.value());
+                            return;
+                        }
+                        if (usernameParam!=null && !usernameParam.equals(username)){
+                            response.sendError(HttpStatus.FORBIDDEN.value());
+                            return;
+                        }
+                    }
+                    if (requestURI.matches("^/user/\\d{1,20}$") &&
+                            Long.parseLong(requestURI.substring("/user/".length()))!=id){
+                        response.sendError(HttpStatus.FORBIDDEN.value());
+                        return;
+                    }
                 }
+
 
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(username,null,authorities);
@@ -70,7 +104,7 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
             } catch (Exception e){
                 log.info(e.toString());
                 //TODO remove hardcode
-                response.setHeader("error","authorization error");
+                response.getWriter().write("authorization error");
                 response.sendError(HttpStatus.BAD_REQUEST.value());
                 return;
             }

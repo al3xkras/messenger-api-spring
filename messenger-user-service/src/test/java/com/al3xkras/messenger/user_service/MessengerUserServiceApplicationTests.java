@@ -5,16 +5,17 @@ import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@ActiveProfiles("test")
+@ActiveProfiles("security-test")
 class MessengerUserServiceApplicationTests {
 
 	@PersistenceContext
@@ -45,8 +46,8 @@ class MessengerUserServiceApplicationTests {
 	}
 
 	static MessengerUser firstUser = MessengerUser.builder()
-			.messengerUserId(1L)
 			.username(nextUniqueUsername())
+			.password("Password123.")
 			.name("Max")
 			.emailAddress("max@gmail.com")
 			.phoneNumber("+48 111-22-33")
@@ -55,6 +56,7 @@ class MessengerUserServiceApplicationTests {
 	static MessengerUser secondUser = MessengerUser.builder()
 			.messengerUserId(2L)
 			.username(nextUniqueUsername())
+			.password("Password123.")
 			.name("Andrew")
 			.emailAddress("andrew@gmail.com")
 			.phoneNumber("+31234567")
@@ -63,28 +65,52 @@ class MessengerUserServiceApplicationTests {
 	static MessengerUser thirdUser = MessengerUser.builder()
 			.messengerUserId(3L)
 			.username(nextUniqueUsername())
+			.password("Password123.")
 			.name("Mike")
 			.emailAddress("mike@gmail.com")
 			.phoneNumber("+4 564-7564")
 			.messengerUserType(MessengerUserType.USER)
 			.build();
 
+	static String adminToken;
+	static String secondUserToken;
+
+	void updateUserToken() throws Exception {
+		MockHttpServletResponse response = mockMvc.perform(post("/user/login")
+						.param("username",secondUser.getUsername())
+						.param("password",secondUser.getPassword()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		secondUserToken = response.getHeader("access-token");
+		assertNotNull(secondUserToken);
+
+	}
+
+	void updateAdminToken() throws Exception {
+		MockHttpServletResponse response = mockMvc.perform(post("/user/login")
+						.param("username",firstUser.getUsername())
+						.param("password",firstUser.getPassword()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		adminToken = response.getHeader("access-token");
+		assertNotNull(adminToken);
+	}
+
+	@Test
+	@Order(0)
+	@Transactional
+	@Commit
+	void createAdmin() {
+		entityManager.persist(firstUser);
+	}
+
 	@Test
 	@Order(1)
 	void testAddNewUser() throws Exception {
-		MessengerUserDTO validUserDto1 = MessengerUserDTO.builder()
-				.username(firstUser.getUsername())
-				.name(firstUser.getName())
-				.password("1a83F_23.")
-				.surname(firstUser.getSurname())
-				.phoneNumber(firstUser.getPhoneNumber())
-				.email(firstUser.getEmailAddress())
-				.messengerUserType(firstUser.getMessengerUserType())
-				.build();
 		MessengerUserDTO validUserDto2 = MessengerUserDTO.builder()
 				.username(secondUser.getUsername())
 				.name(secondUser.getName())
-				.password("1a83F_23.")
+				.password(secondUser.getPassword())
 				.surname(secondUser.getSurname())
 				.phoneNumber(secondUser.getPhoneNumber())
 				.email(secondUser.getEmailAddress())
@@ -93,7 +119,7 @@ class MessengerUserServiceApplicationTests {
 		MessengerUserDTO validUserDto3 = MessengerUserDTO.builder()
 				.username(thirdUser.getUsername())
 				.name(thirdUser.getName())
-				.password("1a83F_23.")
+				.password(thirdUser.getPassword())
 				.surname(thirdUser.getSurname())
 				.phoneNumber(thirdUser.getPhoneNumber())
 				.email(thirdUser.getEmailAddress())
@@ -174,14 +200,10 @@ class MessengerUserServiceApplicationTests {
 				.build();
 
 		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(validUserDto1)))
-				.andExpect(status().isOk())
-				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
-
-		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validUserDto2)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
 		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validUserDto3)))
 				.andExpect(status().isOk())
@@ -223,23 +245,47 @@ class MessengerUserServiceApplicationTests {
 						.content(objectMapper.writeValueAsString(invalidPasswordUserDto3)))
 				.andExpect(status().isBadRequest());
 
+
+		updateUserToken();
+
 	}
 
 	@Test
 	@Order(2)
 	void testFindUserById() throws Exception{
 
-		mockMvc.perform(get("/user/"+firstUser.getMessengerUserId()))
+		updateAdminToken();
+
+		mockMvc.perform(get("/user/"+firstUser.getMessengerUserId())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
 
-		mockMvc.perform(get("/user/"+thirdUser.getMessengerUserId()))
+		mockMvc.perform(get("/user/"+firstUser.getMessengerUserId())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+ secondUserToken))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user/"+thirdUser.getMessengerUserId())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(thirdUser)));
 
-		mockMvc.perform(get("/user/"+10L))
+		mockMvc.perform(get("/user/"+thirdUser.getMessengerUserId())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+ secondUserToken))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user/"+secondUser.getMessengerUserId())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+ secondUserToken))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+		mockMvc.perform(get("/user/"+10L)
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isNotFound())
 				.andExpect(content().string("user not found"));
+
+		mockMvc.perform(get("/user/"+10L))
+				.andExpect(status().isForbidden());
 
 	}
 
@@ -247,20 +293,43 @@ class MessengerUserServiceApplicationTests {
 	@Order(3)
 	void testFindUserByUsername() throws Exception {
 
-		mockMvc.perform(get("/user").param("username",firstUser.getUsername()))
+		mockMvc.perform(get("/user").param("username",firstUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
 
-		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+		mockMvc.perform(get("/user").param("username",firstUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user").param("username",secondUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
 
-		mockMvc.perform(get("/user"))
+		mockMvc.perform(get("/user").param("username",secondUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isBadRequest());
 
-		mockMvc.perform(get("/user").param("username","user10000"))
+		mockMvc.perform(get("/user"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user").param("username","user10000")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isNotFound())
 				.andExpect(content().string("user not found"));
+
+		mockMvc.perform(get("/user").param("username","user10000")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken))
+				.andExpect(status().isForbidden());
 
 	}
 
@@ -312,7 +381,9 @@ class MessengerUserServiceApplicationTests {
 		MessengerUser[] afterEdit = new MessengerUser[1];
 
 
-		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
+		mockMvc.perform(put("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto1)))
 				.andExpect(status().isOk())
@@ -323,10 +394,23 @@ class MessengerUserServiceApplicationTests {
 		assertNotNull(afterEdit[0]);
 		assertNotEquals(firstUser,afterEdit[0]);
 		firstUser = afterEdit[0];
-		log.info(firstUser.toString());
 
+		mockMvc.perform(put("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
 
-		mockMvc.perform(put("/user").param("username",firstUser.getUsername())
+		mockMvc.perform(put("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/user")
+						.param("username",firstUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto2)))
 				.andExpect(status().isOk())
@@ -341,6 +425,7 @@ class MessengerUserServiceApplicationTests {
 
 		//modify by ID
 		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
 						.param("user-id",secondUser.getMessengerUserId().toString())
 						.param("username",secondUser.getUsername())
 						.contentType(MediaType.APPLICATION_JSON)
@@ -356,37 +441,98 @@ class MessengerUserServiceApplicationTests {
 		secondUser = afterEdit[0];
 		log.info(secondUser.toString());
 
+		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("user-id",secondUser.getMessengerUserId().toString())
+						.param("username",secondUser.getUsername())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto3)))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
 
 		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto1)))
 				.andExpect(status().isBadRequest());
 
+		mockMvc.perform(put("/user")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
 
-		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
+		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("user-id",firstUser.getMessengerUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(usernameExistsWhenModifyByUserIdDto)))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string("messenger user with specified username already exists"));
 
-		mockMvc.perform(put("/user").param("user-id",firstUser.getMessengerUserId().toString())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(invalidDto)))
+		mockMvc.perform(put("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(usernameExistsWhenModifyByUserIdDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidDto)))
 				.andExpect(status().isBadRequest());
 
+		mockMvc.perform(put("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/user")
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidDto)))
+				.andExpect(status().isForbidden());
+
+		updateUserToken();
 	}
 
 	@Test
 	@Order(5)
 	void testFindUserByUsernameAfterUpdate() throws Exception {
 
-		mockMvc.perform(get("/user").param("username",firstUser.getUsername()))
+		mockMvc.perform(get("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("username",firstUser.getUsername()))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
 
-		mockMvc.perform(get("/user").param("username",secondUser.getUsername()))
+		mockMvc.perform(get("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("username",firstUser.getUsername()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user")
+						.param("username",firstUser.getUsername()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("username",secondUser.getUsername()))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+		mockMvc.perform(get("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("username",secondUser.getUsername()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+		mockMvc.perform(get("/user")
+						.param("username",secondUser.getUsername()))
+				.andExpect(status().isForbidden());
 	}
 
 	@Test
@@ -396,24 +542,55 @@ class MessengerUserServiceApplicationTests {
 		mockMvc.perform(delete("/user")
 						.param("user-id",firstUser.getMessengerUserId().toString())
 						.param("username","thisUsernameWillBeIgnored"))
-				.andExpect(status().isOk())
-				.andExpect(content().string("deleted user with id "+firstUser.getMessengerUserId()));
+				.andExpect(status().isForbidden());
 
 		mockMvc.perform(delete("/user")
-				.param("username",secondUser.getUsername()))
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.param("username","thisUsernameWillBeIgnored"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("user-id",firstUser.getMessengerUserId().toString())
+						.param("username","thisUsernameWillBeIgnored"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("username",secondUser.getUsername()))
 				.andExpect(status().isOk())
 				.andExpect(content().string("deleted user with username : \""+secondUser.getUsername()+'\"'));
 
-		mockMvc.perform(delete("/user"))
+		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(delete("/user"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.param("username","user1897432"))
 				.andExpect(status().isNotFound())
 				.andExpect(content().string( "user not found"));
 
 		mockMvc.perform(delete("/user")
-				.param("user-id",firstUser.getMessengerUserId().toString()))
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.param("username","user1897432"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/user")
+						.param("username","user1897432"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.param("user-id",secondUser.getMessengerUserId().toString()))
 				.andExpect(status().isNotFound())
 				.andExpect(content().string( "user not found"));
 
@@ -422,36 +599,57 @@ class MessengerUserServiceApplicationTests {
 	@Test
 	@Order(7)
 	void testAddNewUserAfterDelete() throws Exception{
-		MessengerUserDTO validUserDto1 = MessengerUserDTO.builder()
-				.username(firstUser.getUsername())
-				.name(firstUser.getName())
-				.password("1a83F_23.")
-				.surname(firstUser.getSurname())
-				.phoneNumber(firstUser.getPhoneNumber())
-				.email(firstUser.getEmailAddress())
-				.messengerUserType(firstUser.getMessengerUserType())
-				.build();
 		MessengerUserDTO validUserDto2 = MessengerUserDTO.builder()
 				.username(secondUser.getUsername())
 				.name(secondUser.getName())
-				.password("1a83F_23.")
+				.password(secondUser.getPassword())
 				.surname(secondUser.getSurname())
 				.phoneNumber(secondUser.getPhoneNumber())
 				.email(secondUser.getEmailAddress())
 				.messengerUserType(secondUser.getMessengerUserType())
 				.build();
 
-		firstUser.setMessengerUserId(5L);
-		secondUser.setMessengerUserId(6L);
-		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(validUserDto1)))
-				.andExpect(status().isOk())
-				.andExpect(content().json(objectMapper.writeValueAsString(firstUser)));
+		secondUser.setMessengerUserId(5L);
 
+		//No Auth
 		mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validUserDto2)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondUser)));
+
+	}
+
+	@Test
+	@Order(8)
+	void testSecurity() throws Exception {
+
+		//When Add user of type admin, expect HttpStatus.FORBIDDEN
+		MessengerUserDTO validAdminDto = MessengerUserDTO.builder()
+				.username(thirdUser.getUsername())
+				.name(thirdUser.getName())
+				.password(thirdUser.getPassword())
+				.surname(thirdUser.getSurname())
+				.phoneNumber(thirdUser.getPhoneNumber())
+				.email(thirdUser.getEmailAddress())
+				.messengerUserType(MessengerUserType.ADMIN)
+				.build();
+
+		mockMvc.perform(post("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validAdminDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/user")
+						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validAdminDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/user")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validAdminDto)))
+				.andExpect(status().isForbidden());
 	}
 
 }

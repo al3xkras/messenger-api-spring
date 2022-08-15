@@ -10,14 +10,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @WebMvcTest(MessengerUserController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 class MessengerUserControllerTest {
 
     @Autowired
@@ -31,32 +35,36 @@ class MessengerUserControllerTest {
     static MessengerUser firstUser = MessengerUser.builder()
             .messengerUserId(1L)
             .username("user1")
+            .password("Password123.")
             .name("Max")
             .emailAddress("max@gmail.com")
             .phoneNumber("+34 111-22-33")
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
 
-    MessengerUserDTO updatedFirstUserDTO = MessengerUserDTO.builder()
+    static MessengerUserDTO updatedFirstUserDTO = MessengerUserDTO.builder()
             .username("user1")
+            .password("Password123.")
             .name(firstUser.getName())
             .email("maxim@gmail.com")
             .phoneNumber("+22 111-22-33")
             .password("Password123.")
             .messengerUserType(MessengerUserType.ADMIN)
             .build();
-    MessengerUser firstUserUpdate = MessengerUser.builder()
+    static MessengerUser firstUserUpdate = MessengerUser.builder()
             .messengerUserId(1L)
             .username(updatedFirstUserDTO.getUsername())
+            .password("Password123.")
             .name(updatedFirstUserDTO.getName())
             .surname(updatedFirstUserDTO.getSurname())
             .emailAddress(updatedFirstUserDTO.getEmail())
             .phoneNumber(updatedFirstUserDTO.getPhoneNumber())
             .messengerUserType(updatedFirstUserDTO.getMessengerUserType())
             .build();
-    MessengerUser firstUserAfterUpdate = MessengerUser.builder()
+    static MessengerUser firstUserAfterUpdate = MessengerUser.builder()
             .messengerUserId(1L)
             .username(updatedFirstUserDTO.getUsername())
+            .password("Password123.")
             .name(firstUser.getName())
             .surname(updatedFirstUserDTO.getSurname())
             .emailAddress(updatedFirstUserDTO.getEmail())
@@ -127,6 +135,7 @@ class MessengerUserControllerTest {
 
         MessengerUser userBeforeSave = MessengerUser.builder()
                 .username(pojo.getUsername())
+                .password(pojo.getPassword())
                 .name(pojo.getName())
                 .surname(pojo.getSurname())
                 .emailAddress(pojo.getEmail())
@@ -137,6 +146,7 @@ class MessengerUserControllerTest {
         MessengerUser userAfterSave = MessengerUser.builder()
                 .messengerUserId(3L)
                 .username(pojo.getUsername())
+                .password(pojo.getPassword())
                 .name(pojo.getName())
                 .surname(pojo.getSurname())
                 .emailAddress(pojo.getEmail())
@@ -190,6 +200,7 @@ class MessengerUserControllerTest {
 
         MessengerUser firstUserUpdateByUsername = MessengerUser.builder()
                 .username("user1")
+                .password(updatedFirstUserDTO.getPassword())
                 .name(updatedFirstUserDTO.getName())
                 .surname(updatedFirstUserDTO.getSurname())
                 .emailAddress(updatedFirstUserDTO.getEmail())
@@ -222,6 +233,7 @@ class MessengerUserControllerTest {
 
         MessengerUser firstUserUpdateByUsername = MessengerUser.builder()
                 .username("user1")
+                .password(updatedFirstUserDTO.getPassword())
                 .name(updatedFirstUserDTO.getName())
                 .surname(updatedFirstUserDTO.getSurname())
                 .emailAddress(updatedFirstUserDTO.getEmail())

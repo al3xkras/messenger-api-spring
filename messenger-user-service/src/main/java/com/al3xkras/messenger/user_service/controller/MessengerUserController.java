@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.user_service.controller;
 
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
@@ -52,6 +53,9 @@ public class MessengerUserController {
 
     @PostMapping
     public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
+        if (!messengerUserDto.getMessengerUserType().equals(MessengerUserType.USER))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDto.getUsername())
                 .password(messengerUserDto.getPassword())
@@ -71,6 +75,7 @@ public class MessengerUserController {
             throws MessengerUserNotFoundException,MessengerUserAlreadyExistsException{
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDTO.getUsername())
+                .password(messengerUserDTO.getPassword())
                 .name(messengerUserDTO.getName())
                 .surname(messengerUserDTO.getSurname())
                 .emailAddress(messengerUserDTO.getEmail())
@@ -92,9 +97,13 @@ public class MessengerUserController {
                                     @RequestParam(value = "username", required = false) String username)
                             throws MessengerUserNotFoundException{
         if (messengerUserId!=null){
+            if (messengerUserService.getUserTypeById(messengerUserId).equals(MessengerUserType.ADMIN))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             messengerUserService.deleteById(messengerUserId);
             return ResponseEntity.status(HttpStatus.OK).body("deleted user with id "+messengerUserId);
         } else if (username!=null){
+            if (messengerUserService.getUserTypeByUsername(username).equals(MessengerUserType.ADMIN))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             messengerUserService.deleteByUsername(username);
             return ResponseEntity.status(HttpStatus.OK).body("deleted user with username : \""+username+'\"');
         }
