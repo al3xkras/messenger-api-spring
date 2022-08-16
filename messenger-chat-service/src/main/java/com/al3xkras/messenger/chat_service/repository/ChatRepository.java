@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
@@ -23,4 +24,9 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
     Page<Chat> findAllByUsername(String username, Pageable pageable);
 
     Optional<Chat> findByChatName(String chatName);
+
+
+    @Transactional(propagation = Propagation.NEVER)
+    @Query("select chat.chatId from Chat chat where chat.chatName=?1")
+    Optional<Long> getIdByChatName(String chatName);
 }

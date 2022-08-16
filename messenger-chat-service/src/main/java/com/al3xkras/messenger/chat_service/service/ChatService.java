@@ -18,9 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Service
@@ -136,5 +138,14 @@ public class ChatService {
 
     public Page<ChatUser> findAllChatUsersByChatName(String chatName, Pageable pageable) {
         return chatUserRepository.findAllByChatName(chatName,pageable);
+    }
+
+    public ChatUser findChatUserById(@NotNull ChatUserId chatUserId) throws ChatUserNotFoundException{
+        return chatUserRepository.findById(chatUserId).orElseThrow(ChatUserNotFoundException::new);
+    }
+
+    public Long getChatIdByChatName(String chatName) throws ChatNotFoundException {
+        return chatRepository.getIdByChatName(chatName)
+                .orElseThrow(ChatNotFoundException::new);
     }
 }

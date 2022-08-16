@@ -1,0 +1,30 @@
+server:
+  port: 10002
+spring:
+  data:
+    jpa:
+      repositories:
+        enabled: true
+  datasource:
+    url: jdbc:mysql://localhost/messenger_db
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+  h2:
+    console:
+      enabled: true
+  devtools:
+    restart:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  mandatory-file-encoding: UTF-8
+logging:
+  level:
+    org:
+      springframework:
+        transaction:
+          interceptor: TRACE

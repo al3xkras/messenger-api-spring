@@ -52,7 +52,7 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
         Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
         String accessToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*10))
+                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*60))
                 .withIssuer(request.getRequestURI())
                 .withClaim("roles",user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .withClaim("user-id", user.getMessengerUserId())
