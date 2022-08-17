@@ -1,0 +1,25 @@
+security:
+  basic:
+    enabled: false
+spring:
+  data:
+    jpa:
+      repositories:
+        enabled: true
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: root
+  h2:
+    console:
+      enabled: true
+  devtools:
+    restart:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  mandatory-file-encoding: UTF-8

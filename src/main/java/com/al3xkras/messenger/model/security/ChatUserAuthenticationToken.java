@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.model.security;
 
+import com.al3xkras.messenger.model.ChatUserRole;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,12 +11,21 @@ public class ChatUserAuthenticationToken extends AbstractAuthenticationToken {
     private final Long userId;
     private final String chatName;
     private long chatId;
+    private ChatUserRole chatUserRole;
 
     public ChatUserAuthenticationToken(String username, long userId, String chatName, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.username = username;
         this.userId = userId;
         this.chatName = chatName;
+    }
+
+    public ChatUserRole getChatUserRole() {
+        return chatUserRole;
+    }
+
+    public void setChatUserRole(ChatUserRole chatUserRole) {
+        this.chatUserRole = chatUserRole;
     }
 
     @Override

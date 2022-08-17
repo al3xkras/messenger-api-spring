@@ -1,11 +1,7 @@
 package com.al3xkras.messenger.chat_service.controller;
 
-import com.al3xkras.messenger.chat_service.exception.ChatNameAlreadyExistsException;
-import com.al3xkras.messenger.chat_service.exception.ChatNotFoundException;
-import com.al3xkras.messenger.chat_service.exception.ChatUserNotFoundException;
-import com.al3xkras.messenger.chat_service.exception.InvalidMessengerUserException;
+import com.al3xkras.messenger.chat_service.exception.*;
 import com.al3xkras.messenger.chat_service.service.ChatService;
-import com.al3xkras.messenger.chat_service.exception.ChatUserAlreadyExistsException;
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
 import com.al3xkras.messenger.dto.PageRequestDto;
@@ -141,11 +137,13 @@ public class ChatController {
     }
 
     @PutMapping("/chat/users")
-    public ChatUser modifyChatUser(@RequestBody @Valid ChatUserDTO chatUserDTO)
+    public ChatUser modifyChatUser(@RequestParam("chat-id")Long chatId,
+                                   @RequestParam("user-id")Long userId,
+                                   @RequestBody ChatUserDTO chatUserDTO)
             throws ChatUserNotFoundException {
         ChatUser chatUser = ChatUser.builder()
-                .chatId(chatUserDTO.getChatId())
-                .userId(chatUserDTO.getUserId())
+                .chatId(chatId)
+                .userId(userId)
                 .title(chatUserDTO.getTitle())
                 .chatUserRole(chatUserDTO.getChatUserRole())
                 .build();
@@ -153,10 +151,11 @@ public class ChatController {
     }
 
     @DeleteMapping("/chat/users")
-    public ResponseEntity<String> deleteChatUser(@RequestBody ChatUserDTO chatUserDTO){
+    public ResponseEntity<String> deleteChatUser(@RequestParam("chat-id")Long chatId,
+                                                 @RequestParam("user-id")Long userId){
         ChatUser chatUser = ChatUser.builder()
-                .chatId(chatUserDTO.getChatId())
-                .userId(chatUserDTO.getUserId())
+                .chatId(chatId)
+                .userId(userId)
                 .build();
         try {
             chatService.deleteChatUser(chatUser);

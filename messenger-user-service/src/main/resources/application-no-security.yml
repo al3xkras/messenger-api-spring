@@ -1,10 +1,6 @@
-
 server:
   port: 10001
 spring:
-  security:
-    basic:
-      enabled: false
   data:
     jpa:
       repositories:
@@ -14,9 +10,6 @@ spring:
     driverClassName: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-  h2:
-    console:
-      enabled: true
   devtools:
     restart:
       enabled: true

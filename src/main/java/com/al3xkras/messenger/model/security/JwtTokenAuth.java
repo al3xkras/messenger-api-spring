@@ -51,9 +51,11 @@ public class JwtTokenAuth {
         DecodedJWT decodedJWT = jwtVerifier.verify(token);
         String username = decodedJWT.getSubject();
         long id = decodedJWT.getClaim(USER_ID.value()).asLong();
-        Collection<? extends GrantedAuthority> authorities = decodedJWT.getClaim(ROLES.value()).as(MessengerUserType.class)
-                .authorities();
-        return new MessengerUserAuthenticationToken(username,id,authorities);
+        MessengerUserType messengerUserType = decodedJWT.getClaim(ROLES.value()).as(MessengerUserType.class);
+        Collection<? extends GrantedAuthority> authorities = messengerUserType.authorities();
+        MessengerUserAuthenticationToken authenticationToken = new MessengerUserAuthenticationToken(username,id,authorities);
+        authenticationToken.setMessengerUserType(messengerUserType);
+        return authenticationToken;
     }
 
     public static ChatUserAuthenticationToken verifyChatUserToken(String token) throws Exception {
@@ -64,9 +66,11 @@ public class JwtTokenAuth {
         String username = subject[0];
         String chatName = subject[1];
         long messengerUserId = decodedJWT.getClaim(USER_ID.value()).asLong();
-        Collection<? extends GrantedAuthority> authorities = decodedJWT.getClaim(ROLES.value()).as(ChatUserRole.class)
-                .authorities();
-        return new ChatUserAuthenticationToken(username,messengerUserId,chatName,authorities);
+        ChatUserRole role = decodedJWT.getClaim(ROLES.value()).as(ChatUserRole.class);
+        Collection<? extends GrantedAuthority> authorities = role.authorities();
+        ChatUserAuthenticationToken authenticationToken = new ChatUserAuthenticationToken(username,messengerUserId,chatName,authorities);
+        authenticationToken.setChatUserRole(role);
+        return authenticationToken;
     }
 
     public static Algorithm getJwtAuthAlgorithm(){

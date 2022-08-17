@@ -7,18 +7,16 @@ import java.util.*;
 import static com.al3xkras.messenger.model.authorities.ChatUserAuthority.*;
 
 public enum ChatUserRole {
-    GUEST(Arrays.asList(VIEW_MESSAGES,DELETE_SELF)),
-    USER(Arrays.asList(ADD_CHAT_USER,MODIFY_SELF_INFO)),
-    ADMIN(Arrays.asList(MODIFY_CHAT_INFO,
-            ADD_CHAT_USER,
-            MODIFY_SELF_INFO,
-            MODIFY_CHAT_USER_INFO_EXCEPT_SELF,
-            MODIFY_CHAT_USER_TYPE,
-            DELETE_CHAT_USER_EXCEPT_SELF,
-            VIEW_MESSAGES,
-            SEND_MESSAGES,
-            MODIFY_ANY_CHAT_MESSAGE,
-            DELETE_ANY_CHAT_MESSAGE)),
+    ANONYMOUS(Collections.singletonList(CREATE_CHAT)),
+
+    USER(Arrays.asList(ADD_CHAT_USER,MODIFY_SELF_INFO,DELETE_SELF,
+            VIEW_MESSAGES,SEND_MESSAGES,MODIFY_SELF_CHAT_MESSAGES)),
+
+    ADMIN(Arrays.asList(MODIFY_CHAT_INFO, ADD_CHAT_USER, MODIFY_SELF_INFO,
+            MODIFY_CHAT_USER_INFO_EXCEPT_SELF, MODIFY_CHAT_USER_TYPE,
+            DELETE_CHAT_USER_EXCEPT_SELF, VIEW_MESSAGES, SEND_MESSAGES,
+            MODIFY_ANY_CHAT_MESSAGE, DELETE_ANY_CHAT_MESSAGE)),
+
     SUPER_ADMIN(Arrays.asList(ChatUserAuthority.values()));
     private final Set<ChatUserAuthority> authorities;
     public Set<ChatUserAuthority> authorities() {

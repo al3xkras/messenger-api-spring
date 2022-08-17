@@ -3,29 +3,23 @@ package com.al3xkras.messenger.chat_service.filter;
 import com.al3xkras.messenger.chat_service.exception.ChatNotFoundException;
 import com.al3xkras.messenger.chat_service.exception.ChatServiceAuthenticationException;
 import com.al3xkras.messenger.chat_service.exception.ChatUserNotFoundException;
-import com.al3xkras.messenger.chat_service.model.ChatUserAuthenticationToken;
 import com.al3xkras.messenger.chat_service.service.ChatService;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.model.ChatUserId;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
+import com.al3xkras.messenger.model.security.MessengerUserAuthenticationToken;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -34,8 +28,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Date;
+
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
 public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
@@ -51,6 +47,7 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
         if (request.getRequestURI().equals("/error")){
+            log.warn("authentication filter ignored for request: "+request.getRequestURI());
             filterChain.doFilter(req,res);
             return;
         }
@@ -76,78 +73,70 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
             ChatUserId id = new ChatUserId(chatId,authToken.getUserId());
             chatUser = chatService.findChatUserById(id);
         } catch (ChatUserNotFoundException e){
-            response.sendError(HttpStatus.FORBIDDEN.value());
+            log.warn("chat user not found:" +
+                    " chat: "+authToken.getChatName()+
+                    " user: "+authToken.getUsername());
+            response.sendError(HttpStatus.FORBIDDEN.value(),"chat user not found");
             return;
         }
         authToken.setChatId(chatId);
-        authToken.getAuthorities().add(new SimpleGrantedAuthority(chatUser.getChatUserRole().name()));
+        authToken.getAuthorities().addAll(chatUser.getChatUserRole().authorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
         successfulAuthentication(request,response,filterChain,authToken);
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        String userAuth = request.getParameter("user-auth-token");
-        String chatName = request.getParameter("chat-name");
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
+        String userAuth = request.getParameter(USER_TOKEN.value());
+        String chatName = request.getParameter(CHAT_NAME.value());
 
         if (userAuth==null || userAuth.isEmpty() ||
                 chatName==null || chatName.isEmpty()) {
-            log.info("auth failed");
+            log.warn("user auth token or chat name is null");
             throw new BadCredentialsException("invalid credentials");
         }
 
-        String username;
-        List<String> roles;
-        long id;
-        Collection<SimpleGrantedAuthority> authorities = new HashSet<>();
-        //TODO remove hardcode
-        String prefix = "Bearer ";
-        if (userAuth.startsWith(prefix)) {
-            String token = userAuth.substring(prefix.length());
-
-            //TODO remove hardcode
-            Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
-            JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-            try {
-                DecodedJWT decodedJWT = jwtVerifier.verify(token);
-                username = decodedJWT.getSubject();
-                roles = decodedJWT.getClaim("roles").asList(String.class);
-                id = decodedJWT.getClaim("user-id").asLong();
-            } catch (Exception e){
-                log.info("invalid token (1)");
-                throw new BadCredentialsException("invalid user auth token");
-            }
-        } else {
-            log.info("invalid token (2)");
+        String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
+        if (!userAuth.startsWith(prefix)) {
+            log.warn("invalid token");
             throw new BadCredentialsException("invalid user auth token");
         }
 
-        if (roles.contains(MessengerUserType.ADMIN.name())){
-            authorities.add(new SimpleGrantedAuthority(ChatUserRole.ADMIN.name()));
+        MessengerUserAuthenticationToken userAuthToken;
+        try {
+            String token = userAuth.substring(prefix.length());
+            userAuthToken = JwtTokenAuth.verifyMessengerUserToken(token);
+        } catch (Exception e){
+            log.warn("invalid user auth token");
+            throw new BadCredentialsException("invalid user auth token");
         }
-
-        return new ChatUserAuthenticationToken(username,id,chatName,authorities);
+        ChatUserAuthenticationToken chatUserAuthenticationToken =
+                new ChatUserAuthenticationToken(userAuthToken.getUsername(),userAuthToken.getMessengerUserId(),chatName,Collections.emptyList());
+        if (userAuthToken.getMessengerUserType().equals(MessengerUserType.ADMIN)){
+            chatUserAuthenticationToken.setChatUserRole(ChatUserRole.SUPER_ADMIN);
+        }
+        return chatUserAuthenticationToken;
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Authentication authResult) {
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) authResult;
-        //TODO remove hardcode
-        Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
+        Algorithm algorithm = JwtTokenAuth.getJwtAuthAlgorithm();
+        String subject = token.getChatName()+' '+token.getUsername();
         String accessToken = JWT.create()
-                .withSubject(token.getChatName()+":"+token.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*10))
+                .withSubject(subject)
+                .withExpiresAt(new Date(System.currentTimeMillis()+JwtTokenAuth.DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS))
                 .withIssuer(request.getRequestURI())
-                .withClaim("roles",token.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
-                .withClaim("chat-id", token.getChatId())
-                .withClaim("user-id", token.getUserId())
+                .withClaim(ROLES.value(),token.getChatUserRole().name())
+                .withClaim(CHAT_ID.value(), token.getChatId())
+                .withClaim(USER_ID.value(), token.getUserId())
                 .sign(algorithm);
         String refreshToken = JWT.create()
-                .withSubject(token.getChatName()+":"+token.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*60*24*30))
+                .withSubject(subject)
+                .withExpiresAt(new Date(System.currentTimeMillis()+JwtTokenAuth.DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS))
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
-        //TODO remove hardcode
-        response.setHeader("access-token",accessToken);
-        response.setHeader("refresh-token",refreshToken);
+        response.setHeader(HEADER_ACCESS_TOKEN.value(),accessToken);
+        response.setHeader(HEADER_REFRESH_TOKEN.value(),refreshToken);
     }
 }

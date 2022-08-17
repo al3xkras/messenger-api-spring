@@ -1,5 +1,8 @@
 package com.al3xkras.messenger.chat_service;
 
+import com.al3xkras.messenger.chat_service.config.SecurityConfig;
+import com.al3xkras.messenger.chat_service.controller.ChatController;
+import com.al3xkras.messenger.chat_service.repository.ChatRepository;
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
@@ -14,12 +17,13 @@ import com.al3xkras.messenger.chat_service.service.ChatService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.filter.TypeExcludeFilters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
@@ -27,11 +31,17 @@ import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityManager;
@@ -48,11 +58,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("no-security")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MessengerChatServiceApplicationTests {
-
-	@PersistenceContext
-	private EntityManager entityManager;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -134,8 +142,8 @@ class MessengerChatServiceApplicationTests {
 			.chatUserRole(ChatUserRole.USER)
 			.build();
 
-	static String userAuthToken;
-	static String adminAuthToken;
+	static String userAuthToken="";
+	static String adminAuthToken="";
 
 	static String chatUser11AuthToken;
 	static String chatUser22AuthToken;
@@ -188,12 +196,11 @@ class MessengerChatServiceApplicationTests {
 
 		ResponseEntity<MessengerUser> response;
 		try {
-			ResponseEntity<MessengerUser> firstUserPersisted = restTemplate.exchange(
-					RequestEntity.get(UriComponentsBuilder.fromUriString("/user").queryParam("username",firstUser.getUsername()).toUriString())
-							.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminAuthToken)
-							.build(), MessengerUser.class);
-			assertNotNull(firstUserPersisted);
-			firstUser = firstUserPersisted.getBody();
+			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(objectMapper.writeValueAsString(validUserDto1)), MessengerUser.class);
+			assertNotNull(response);
+			firstUser = response.getBody();
 			//No Auth required
 			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -233,8 +240,6 @@ class MessengerChatServiceApplicationTests {
 	@Test
 	@Order(12)
 	void testAuthentication(){
-
-		mockMvc.perform()
 
 	}
 
@@ -496,8 +501,10 @@ class MessengerChatServiceApplicationTests {
 		ChatUser[] modified = new ChatUser[1];
 
 		mockMvc.perform(put("/chat/users")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(validDto)))
+						.param("chat-id",validDto.getChatId().toString())
+						.param("user-id",validDto.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto)))
 				.andExpect(status().isOk())
 				.andDo(result -> modified[0] = objectMapper.readValue(
 						result.getResponse().getContentAsString(),ChatUser.class));
@@ -506,6 +513,8 @@ class MessengerChatServiceApplicationTests {
 		chatUser11 = modified[0];
 
 		mockMvc.perform(put("/chat/users")
+						.param("chat-id",validDto2.getChatId().toString())
+						.param("user-id",validDto2.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto2)))
 				.andExpect(status().isOk())
@@ -516,16 +525,21 @@ class MessengerChatServiceApplicationTests {
 		chatUser12 = modified[0];
 
 		mockMvc.perform(put("/chat/users")
+						.param("chat-id",invalidIdDto.getChatId().toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(invalidIdDto)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(put("/chat/users")
+						.param("chat-id",chatUserDoesNotExistsDto.getChatId().toString())
+						.param("user-id",chatUserDoesNotExistsDto.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(chatUserDoesNotExistsDto)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(put("/chat/users")
+						.param("chat-id",chatUserDoesNotExistsDto2.getChatId().toString())
+						.param("user-id",chatUserDoesNotExistsDto2.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(chatUserDoesNotExistsDto2)))
 				.andExpect(status().isBadRequest());
@@ -644,46 +658,30 @@ class MessengerChatServiceApplicationTests {
 		ChatUserDTO invalidIdDto1 = ChatUserDTO.builder()
 				.chatId(chatUser11.getChatId())
 				.build();
-		ChatUserDTO invalidIdDto2 = ChatUserDTO.builder()
-				.build();
 		ChatUserDTO invalidIdDto3 = ChatUserDTO.builder()
 				.chatId(30L)
-				.userId(349L)
-				.build();
-		ChatUserDTO invalidIdDto4 = ChatUserDTO.builder()
 				.userId(349L)
 				.build();
 		ChatUserDTO userThatDoesNotExistDto = validDto1;
 
 		mockMvc.perform(delete("/chat/users")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(validDto1)))
+						.param("chat-id",validDto1.getChatId().toString())
+						.param("user-id",validDto1.getUserId().toString()))
 				.andExpect(status().isOk())
 				.andExpect(content().string("chat user deleted successfully"));
 
 		mockMvc.perform(delete("/chat/users")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(invalidIdDto1)))
+						.param("chat-id",invalidIdDto1.getChatId().toString()))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(delete("/chat/users")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(invalidIdDto2)))
+						.param("chat-id",invalidIdDto3.getChatId().toString())
+						.param("user-id",invalidIdDto3.getUserId().toString()))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(delete("/chat/users")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(invalidIdDto3)))
-				.andExpect(status().isBadRequest());
-
-		mockMvc.perform(delete("/chat/users")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(invalidIdDto4)))
-				.andExpect(status().isBadRequest());
-
-		mockMvc.perform(delete("/chat/users")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(userThatDoesNotExistDto)))
+						.param("chat-id",userThatDoesNotExistDto.getChatId().toString())
+						.param("user-id",userThatDoesNotExistDto.getUserId().toString()))
 				.andExpect(status().isBadRequest());
 
 	}

@@ -34,6 +34,7 @@ public class SecurityConfig {
 
     @Autowired
     Environment env;
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

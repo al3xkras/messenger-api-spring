@@ -1,15 +1,12 @@
 package com.al3xkras.messenger.chat_service.filter;
 
-import com.al3xkras.messenger.entity.ChatUser;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
+import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,9 +15,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
+
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
 public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
@@ -30,6 +27,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
 
         if (uri.equals("/auth")){
             filterChain.doFilter(request,response);
+            log.info("authorization filter ignored for URI: "+uri);
             return;
         }
 
@@ -40,48 +38,130 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (uri.equals("/chat") && request.getMethod().equalsIgnoreCase("post")){
-            if (authHeader.startsWith(prefix)){
-                String username;
-                long userId;
-                Collection<SimpleGrantedAuthority> authorities;
-                try {
-                    String token = authHeader.substring(prefix.length());
+        ChatUserAuthenticationToken authToken = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        Collection<GrantedAuthority> authorities = authToken.getAuthorities();
 
-                    //TODO remove hardcode
-                    Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
-                    JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-                    DecodedJWT decodedJWT = jwtVerifier.verify(token);
-                    username = decodedJWT.getSubject();
-                    //TODO remove hardcode
-                    String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
-                    userId = decodedJWT.getClaim("user-id").asLong();
-                    log.info(Arrays.toString(roles));
-                    authorities = Arrays.stream(roles)
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
-                } catch (Exception e){
-                    log.info(e.toString());
-                    //TODO remove hardcode
-                    response.getWriter().write("authorization error");
-                    response.sendError(HttpStatus.BAD_REQUEST.value());
+        HttpMethod method = HttpMethod.valueOf(request.getMethod().toUpperCase());
+        String messageForbidden = "forbidden: ("+method+") "+uri;
+        if (method.equals(HttpMethod.GET)){
+            if (uri.equals("/chat") || uri.equals("/chat/users")){
+                boolean readingSelfChatInfo;
+                String chatIdParam = request.getParameter(CHAT_ID.value());
+                String chatName = request.getParameter(CHAT_NAME.value());
+                if (chatIdParam!=null){
+                    long chatId;
+                    try {
+                        chatId = Long.parseLong(chatIdParam);
+                    } catch (NumberFormatException e){
+                        response.sendError(HttpStatus.BAD_REQUEST.value(),"invalid chat ID");
+                        log.warn("invalid chat ID: "+chatIdParam);
+                        return;
+                    }
+                    readingSelfChatInfo = chatId==authToken.getChatId();
+                } else if (chatName!=null){
+                    readingSelfChatInfo = chatName.equals(authToken.getChatName());
+                } else {
+                    log.warn("parameters "+CHAT_ID.value()+" and "+CHAT_NAME.value()+" are null");
+                    response.sendError(HttpStatus.BAD_REQUEST.value(),"parameters "+CHAT_ID.value()+" and "+CHAT_NAME.value()+" are null");
                     return;
                 }
-            } else {
-                response.sendError(HttpStatus.BAD_REQUEST.value(),"Invalid access token");
-                return;
+                if (!((readingSelfChatInfo && authorities.contains(ChatUserAuthority.READ_SELF_CHATS_INFO)) ||
+                        (!readingSelfChatInfo && authorities.contains(ChatUserAuthority.READ_ANY_CHATS_INFO_EXCEPT_SELF)))){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            } else if (uri.equals("/chats")){
+                String username = request.getParameter(USERNAME.value());
+                String userIdParam = request.getParameter(USER_ID.value());
+                boolean readingSelfChats;
+                if (userIdParam!=null){
+                    long userId;
+                    try {
+                        userId = Long.parseLong(userIdParam);
+                    } catch (NumberFormatException e){
+                        response.sendError(HttpStatus.BAD_REQUEST.value(),"invalid user ID");
+                        log.warn("invalid user ID: "+userIdParam);
+                        return;
+                    }
+                    readingSelfChats = userId==authToken.getUserId();
+                } else if (username!=null){
+                    readingSelfChats = username.equals(authToken.getUsername());
+                } else {
+                    String message = "parameters "+USERNAME.value()+" and "+USER_ID.value()+" are null";
+                    log.warn(message);
+                    response.sendError(HttpStatus.BAD_REQUEST.value(),message);
+                    return;
+                }
+                if (!((readingSelfChats && authorities.contains(ChatUserAuthority.READ_SELF_CHATS_INFO)) ||
+                        (!readingSelfChats && authorities.contains(ChatUserAuthority.READ_ANY_CHATS_INFO_EXCEPT_SELF)))){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            }
+        } else if (method.equals(HttpMethod.PUT)){
+            if (uri.equals("/chat")){
+                if (!authorities.contains(ChatUserAuthority.MODIFY_CHAT_INFO)){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            } else if (uri.equals("/chat/users")){
+                long chatId,userId;
+                try {
+                    chatId = Long.parseLong(request.getParameter(CHAT_ID.value()));
+                    userId = Long.parseLong(request.getParameter(USER_ID.value()));
+                } catch (RuntimeException e){
+                    String message = "invalid chat user ID";
+                    log.warn(message);
+                    response.sendError(HttpStatus.BAD_REQUEST.value(),message);
+                    return;
+                }
+                boolean modifyingSelf = (chatId==authToken.getChatId() && userId==authToken.getUserId());
+                if (!((modifyingSelf && authorities.contains(ChatUserAuthority.MODIFY_SELF_INFO)) ||
+                        (!modifyingSelf && authorities.contains(ChatUserAuthority.MODIFY_CHAT_USER_INFO_EXCEPT_SELF)))){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            }
+        } else if (method.equals(HttpMethod.POST)){
+            if (uri.equals("/chat")){
+                if (!authorities.contains(ChatUserAuthority.CREATE_CHAT)){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            } else if (uri.equals("/chat/users")){
+                if (!authorities.contains(ChatUserAuthority.ADD_CHAT_USER)){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+            }
+        } else if (method.equals(HttpMethod.DELETE)){
+            if (uri.equals("/chat/users")){
+                long chatId,userId;
+                try {
+                    chatId = Long.parseLong(request.getParameter(CHAT_ID.value()));
+                    userId = Long.parseLong(request.getParameter(USER_ID.value()));
+                } catch (RuntimeException e){
+                    String message = "invalid chat user ID";
+                    log.warn(message);
+                    response.sendError(HttpStatus.BAD_REQUEST.value(),message);
+                    return;
+                }
+                boolean deletingSelf = (chatId==authToken.getChatId() && userId==authToken.getUserId());
+                if (!((deletingSelf && authorities.contains(ChatUserAuthority.DELETE_SELF)) ||
+                        (!deletingSelf && authorities.contains(ChatUserAuthority.DELETE_ANYONE_EXCEPT_SELF)))){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
             }
         }
 
-        //TODO remove hardcode
-        if (authHeader.startsWith(prefix)){
-
-
-
-        } else {
-            response.sendError(HttpStatus.BAD_REQUEST.value(),"Invalid access token");
-            return;
-        }
         filterChain.doFilter(request,response);
     }
 }

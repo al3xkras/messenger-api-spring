@@ -209,8 +209,11 @@ class ChatControllerTest {
         Mockito.when(chatService.updateChatUser(chatUserModified))
                 .thenReturn(chatUserModified);
 
-        mockMvc.perform(put("/chat/users").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(chatUserDTO)))
+        mockMvc.perform(put("/chat/users")
+                        .param("chat-id",chatUserDTO.getChatId().toString())
+                        .param("user-id",chatUserDTO.getUserId().toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(chatUserDTO)))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(chatUserModified)));
 
