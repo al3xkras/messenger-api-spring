@@ -1,16 +1,15 @@
 package com.al3xkras.messenger.user_service.config;
 
-import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.filter.UserServiceAuthenticationFilter;
 import com.al3xkras.messenger.user_service.filter.UserServiceAuthorizationFilter;
 import com.al3xkras.messenger.user_service.service.MessengerUserDetailsService;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,7 +19,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static com.al3xkras.messenger.model.MessengerUserType.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 @Configuration
@@ -31,9 +32,8 @@ public class SecurityConfig {
     @Autowired
     private MessengerUserService messengerUserService;
 
-    @Value("${spring.profiles.active}")
-    private String profile;
-
+    @Autowired
+    Environment env;
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -41,8 +41,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-
-        if (profile.equals("no-security")){
+        Set<String> profiles = new HashSet<>(Arrays.asList(env.getActiveProfiles()));
+        if (profiles.contains("no-security")){
             http.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
             log.warn("spring security is disabled!");
             return http.build();

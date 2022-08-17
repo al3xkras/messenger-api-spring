@@ -33,47 +33,54 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
+        String prefix = "Bearer ";
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader==null){
             response.sendError(HttpStatus.FORBIDDEN.value());
             return;
         }
 
-        //TODO remove hardcode
-        String prefix = "Bearer ";
-        if (authHeader.startsWith(prefix)){
-            String username;
-            long userId;
-            Collection<SimpleGrantedAuthority> authorities;
-            try {
-                String token = authHeader.substring(prefix.length());
+        if (uri.equals("/chat") && request.getMethod().equalsIgnoreCase("post")){
+            if (authHeader.startsWith(prefix)){
+                String username;
+                long userId;
+                Collection<SimpleGrantedAuthority> authorities;
+                try {
+                    String token = authHeader.substring(prefix.length());
 
-                //TODO remove hardcode
-                Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
-                JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-                DecodedJWT decodedJWT = jwtVerifier.verify(token);
-                username = decodedJWT.getSubject();
-                //TODO remove hardcode
-                String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
-                userId = decodedJWT.getClaim("user-id").asLong();
-                log.info(Arrays.toString(roles));
-                authorities = Arrays.stream(roles)
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-            } catch (Exception e){
-                log.info(e.toString());
-                //TODO remove hardcode
-                response.getWriter().write("authorization error");
-                response.sendError(HttpStatus.BAD_REQUEST.value());
+                    //TODO remove hardcode
+                    Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
+                    JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+                    DecodedJWT decodedJWT = jwtVerifier.verify(token);
+                    username = decodedJWT.getSubject();
+                    //TODO remove hardcode
+                    String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
+                    userId = decodedJWT.getClaim("user-id").asLong();
+                    log.info(Arrays.toString(roles));
+                    authorities = Arrays.stream(roles)
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                } catch (Exception e){
+                    log.info(e.toString());
+                    //TODO remove hardcode
+                    response.getWriter().write("authorization error");
+                    response.sendError(HttpStatus.BAD_REQUEST.value());
+                    return;
+                }
+            } else {
+                response.sendError(HttpStatus.BAD_REQUEST.value(),"Invalid access token");
                 return;
             }
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(username,null,authorities);
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        }
 
-            if (request.getMethod().equalsIgnoreCase("get") &&
-                    uri.equals("/chat")){
-            }
+        //TODO remove hardcode
+        if (authHeader.startsWith(prefix)){
+
+
+
+        } else {
+            response.sendError(HttpStatus.BAD_REQUEST.value(),"Invalid access token");
+            return;
         }
         filterChain.doFilter(request,response);
     }

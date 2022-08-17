@@ -1,18 +1,14 @@
 package com.al3xkras.messenger.user_service.filter;
 
-import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.user_service.model.MessengerUserDetails;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import com.al3xkras.messenger.model.authorities.MessengerUserAuthority;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
+import com.al3xkras.messenger.model.security.MessengerUserAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,9 +17,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
+
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USERNAME;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USER_ID;
 
 @Slf4j
 public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
@@ -32,83 +29,129 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         if (requestURI.equals("/user/login") ||
                 (request.getMethod().equalsIgnoreCase("post") && requestURI.equals("/user"))){
-            log.info("authorization filter ignored");
+            log.info("authorization filter ignored for url: "+requestURI+" method:"+request.getMethod());
             filterChain.doFilter(request, response);
             return;
         }
 
-        log.info("authorization filter NOT ignored");
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader==null){
-            response.sendError(HttpStatus.FORBIDDEN.value());
+            log.warn("unauthorized request");
+            response.sendError(HttpStatus.FORBIDDEN.value(),"unauthorized request");
             return;
         }
 
-        //TODO remove hardcode
-        String prefix = "Bearer ";
-        if (authHeader.startsWith(prefix)){
-            try {
-                String token = authHeader.substring(prefix.length());
+        String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
+        if (!authHeader.startsWith(prefix)) {
+            log.warn("invalid access token: "+authHeader);
+            response.sendError(HttpStatus.BAD_REQUEST.value(),"invalid access token");
+            return;
+        }
 
-                //TODO remove hardcode
-                Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
-                JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-                DecodedJWT decodedJWT = jwtVerifier.verify(token);
-                String username = decodedJWT.getSubject();
-                //TODO remove hardcode
-                String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
-                long id = decodedJWT.getClaim("user-id").asLong();
-                log.info(Arrays.toString(roles));
-                Collection<SimpleGrantedAuthority> authorities = Arrays.stream(roles)
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
+        MessengerUserAuthenticationToken authResult;
+        try {
+            String token = authHeader.substring(prefix.length());
+            authResult = JwtTokenAuth.verifyMessengerUserToken(token);
+        } catch (Exception e){
+            log.warn("authorization error: "+e.getMessage());
+            response.sendError(HttpStatus.BAD_REQUEST.value(),"authorization error");
+            return;
+        }
 
-                if (requestURI.startsWith("/user") && !authorities.contains(new SimpleGrantedAuthority(MessengerUserType.ADMIN.name()))){
-                    if (request.getMethod().equalsIgnoreCase("get") && requestURI.equals("/user")){
-                        String usernameParam = request.getParameter("username");
-                        if (usernameParam==null){
-                            response.getWriter().write("\"username\" param is not specified");
-                            response.sendError(HttpStatus.BAD_REQUEST.value());
-                            return;
-                        }
-                        if (!usernameParam.equals(username)){
-                            response.sendError(HttpStatus.FORBIDDEN.value());
-                            return;
-                        }
-                    }
-                    if ((request.getMethod().equalsIgnoreCase("put") || request.getMethod().equalsIgnoreCase("delete")) &&
-                            requestURI.equals("/user")){
+        HttpMethod method = HttpMethod.valueOf(request.getMethod().toUpperCase());
+        Collection<GrantedAuthority> authorities = authResult.getAuthorities();
 
-                        String userIdParam = request.getParameter("user-id");
-                        String usernameParam = request.getParameter("username");
-                        if (userIdParam!=null && Long.parseLong(userIdParam)!=id){
-                            response.sendError(HttpStatus.FORBIDDEN.value());
-                            return;
-                        }
-                        if (usernameParam!=null && !usernameParam.equals(username)){
-                            response.sendError(HttpStatus.FORBIDDEN.value());
-                            return;
-                        }
-                    }
-                    if (requestURI.matches("^/user/\\d{1,20}$") &&
-                            Long.parseLong(requestURI.substring("/user/".length()))!=id){
-                        response.sendError(HttpStatus.FORBIDDEN.value());
-                        return;
-                    }
+        if (method.equals(HttpMethod.GET)){
+            if (requestURI.equals("/user")){
+                String usernameParam = request.getParameter(USERNAME.value());
+                if (usernameParam==null){
+                    response.sendError(HttpStatus.BAD_REQUEST.value(),"\""+USERNAME.value()+"\" param is not specified");
+                    return;
+                }
+                boolean readingSelfInfo = usernameParam.equals(authResult.getUsername());
+                if (!((readingSelfInfo && authorities.contains(MessengerUserAuthority.READ_SELF_INFO)) ||
+                        (!readingSelfInfo && authorities.contains(MessengerUserAuthority.READ_ANY_USER_INFO_EXCEPT_SELF)))
+                    ){
+                    String message = "forbidden: (GET) /user for "+USERNAME.value()+" \""+usernameParam+"\"";
+                    log.warn(message);
+                    response.sendError(HttpStatus.FORBIDDEN.value(), message);
+                    return;
                 }
 
+            } else if (requestURI.matches("^/user/\\d{1,20}$")){
+                long messengerUserId = Long.parseLong(requestURI.substring("/user/".length()));
+                boolean readingSelfInfo = messengerUserId==authResult.getMessengerUserId();
+                if (!((readingSelfInfo && authorities.contains(MessengerUserAuthority.READ_SELF_INFO)) ||
+                        (!readingSelfInfo && authorities.contains(MessengerUserAuthority.READ_ANY_USER_INFO_EXCEPT_SELF)))
+                ){
+                    String message = "forbidden: (GET) /user, "+USER_ID.value()+": "+messengerUserId;
+                    log.warn(message);
+                    response.sendError(HttpStatus.FORBIDDEN.value(), message);
+                    return;
+                }
+            }
 
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(username,null,authorities);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            } catch (Exception e){
-                log.info(e.toString());
-                //TODO remove hardcode
-                response.getWriter().write("authorization error");
-                response.sendError(HttpStatus.BAD_REQUEST.value());
-                return;
+        } else if (method.equals(HttpMethod.PUT)){
+            if (requestURI.equals("/user")){
+                String userIdParam = request.getParameter("user-id");
+                String usernameParam = request.getParameter("username");
+                Boolean modifyingSelf = isModifyingSelf(request,response,userIdParam,usernameParam,authResult);
+                if (modifyingSelf==null)
+                    return;
+                if (!((modifyingSelf && authorities.contains(MessengerUserAuthority.MODIFY_SELF)) ||
+                        (!modifyingSelf && authorities.contains(MessengerUserAuthority.MODIFY_ANY_USER_EXCEPT_SELF)))){
+                    log.warn("forbidden: (PUT) /user");
+                    response.sendError(HttpStatus.FORBIDDEN.value(), "forbidden: (PUT) /user");
+                    return;
+                }
+
+            }
+
+        } else if (method.equals(HttpMethod.POST)){
+            //(POST) method for /user does not require authorization
+            log.warn("post method is unauthorized");
+        } else if (method.equals(HttpMethod.DELETE)){
+            if (requestURI.equals("/user")){
+                String userIdParam = request.getParameter("user-id");
+                String usernameParam = request.getParameter("username");
+                Boolean deletingSelf = isDeletingSelf(request,response,userIdParam,usernameParam,authResult);
+                if (deletingSelf==null)
+                    return;
+
+                if (!((deletingSelf && authorities.contains(MessengerUserAuthority.DELETE_SELF)) ||
+                        (!deletingSelf && authorities.contains(MessengerUserAuthority.DELETE_ANY_USER_EXCEPT_SELF)))){
+                    log.warn("forbidden: (DELETE) /user");
+                    response.sendError(HttpStatus.FORBIDDEN.value(), "forbidden: (DELETE) /user");
+                    return;
+                }
             }
         }
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(authResult.getUsername(),null,authResult.getAuthorities()));
         filterChain.doFilter(request,response);
+    }
+
+    private Boolean isModifyingSelf(HttpServletRequest request, HttpServletResponse response, String userIdParam,String usernameParam,
+                                    MessengerUserAuthenticationToken authResult) throws IOException {
+        if (userIdParam!=null){
+            long messengerUserId;
+            try {
+                messengerUserId = Long.parseLong(userIdParam);
+            } catch (NumberFormatException e){
+                response.sendError(HttpStatus.BAD_REQUEST.value(),"invalid user id");
+                return null;
+            }
+            return messengerUserId==authResult.getMessengerUserId();
+        } else if (usernameParam!=null){
+            return usernameParam.equals(authResult.getUsername());
+        } else {
+            response.sendError(HttpStatus.BAD_REQUEST.value(),"please specify \"username\" or \"user-id\"");
+            return null;
+        }
+    }
+
+    private Boolean isDeletingSelf(HttpServletRequest request, HttpServletResponse response, String userIdParam,String usernameParam,
+                                   MessengerUserAuthenticationToken authResult) throws IOException {
+        return isModifyingSelf(request,response,userIdParam,usernameParam,authResult);
     }
 }

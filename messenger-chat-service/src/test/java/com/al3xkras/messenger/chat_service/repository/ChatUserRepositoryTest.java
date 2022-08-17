@@ -7,9 +7,7 @@ import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.model.ChatUserId;
 import org.hibernate.TransientPropertyValueException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -18,6 +16,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.persistence.EntityNotFoundException;
@@ -28,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ChatUserRepositoryTest {
 
     @Autowired
@@ -38,6 +38,7 @@ class ChatUserRepositoryTest {
 
     static MessengerUser firstUser = MessengerUser.builder()
             .username("user1")
+            .password("Password123.")
             .name("Max")
             .emailAddress("max@gmail.com")
             .phoneNumber("111-22-33")
@@ -45,6 +46,7 @@ class ChatUserRepositoryTest {
             .build();
     static MessengerUser secondUser = MessengerUser.builder()
             .username("user2")
+            .password("Password123.")
             .name("Andrew")
             .emailAddress("andrew@gmail.com")
             .phoneNumber("116-22-345")
@@ -52,6 +54,7 @@ class ChatUserRepositoryTest {
             .build();
     static MessengerUser thirdUser = MessengerUser.builder()
             .username("user3")
+            .password("Password123.")
             .name("Mike")
             .emailAddress("mike@gmail.com")
             .phoneNumber("456-75-645")
@@ -100,7 +103,7 @@ class ChatUserRepositoryTest {
             .chatUserRole(ChatUserRole.USER)
             .build();
 
-    void init(){
+    static void init(){
         firstChat = Chat.builder()
                 .chatName("first_chat")
                 .chatDisplayName("First Chat!")
@@ -160,11 +163,13 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(1)
     void whenSaveNewChatUser_thenReturnNewUser(){
         assertEquals(chatUser23,chatUserRepository.saveAndFlush(chatUser23));
     }
 
     @Test
+    @Order(2)
     void whenSaveExistingChatUser_thenUpdate(){
 
         assertEquals(chatUser22,chatUserRepository.findById(new ChatUserId(secondChat.getChatId(),firstUser.getMessengerUserId())).orElseThrow(RuntimeException::new));
@@ -179,6 +184,7 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(3)
     void whenFindAllByChatId_thenReturn(){
         Pageable firstPageOfSize1 = PageRequest.of(0,1);
         Pageable firstPageOfSize2 = PageRequest.of(0,2);
@@ -210,6 +216,7 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(4)
     void whenMessengerUserIsModified_thenChatUserReturnsModifiedMessengerUser(){
         Pageable firstPageOfSize1 = PageRequest.of(0,1);
 
@@ -239,10 +246,12 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(5)
     void whenSaveChatUserWithInvalidMessengerUser_thenThrowInvalidDataAccessApiUsageException(){
         MessengerUser notPersisted = MessengerUser.builder()
                 .messengerUserId(4000L)
                 .username("user4")
+                .password("Password123.")
                 .name("Mike")
                 .emailAddress("mike@gmail.com")
                 .phoneNumber("456-75-645")
@@ -262,6 +271,7 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(6)
     void whenDeleteChatUserThatDoesNotExist_thenThrowEmptyResultDataAccessException(){
         Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
             chatUserRepository.deleteById(new ChatUserId(chatUser23.getChatId(),chatUser23.getUserId()));
@@ -269,6 +279,7 @@ class ChatUserRepositoryTest {
     }
 
     @Test
+    @Order(7)
     void whenDeleteChatUserByInvalidId_thenThrowEmptyResultDataAccessException(){
         Assertions.assertThrows(EmptyResultDataAccessException.class,()->{
             chatUserRepository.deleteById(new ChatUserId(null,chatUser23.getUserId()));

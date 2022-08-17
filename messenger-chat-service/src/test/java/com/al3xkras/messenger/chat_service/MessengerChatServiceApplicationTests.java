@@ -22,14 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -62,6 +65,7 @@ class MessengerChatServiceApplicationTests {
 	static MessengerUser firstUser = MessengerUser.builder()
 			.messengerUserId(1L)
 			.username("user1")
+			.password("Password123.")
 			.name("Max")
 			.emailAddress("max@gmail.com")
 			.phoneNumber("+43 111-22-33")
@@ -70,6 +74,7 @@ class MessengerChatServiceApplicationTests {
 	static MessengerUser secondUser = MessengerUser.builder()
 			.messengerUserId(2L)
 			.username("user2")
+			.password("Password123.")
 			.name("Andrew")
 			.emailAddress("andrew@gmail.com")
 			.phoneNumber("+43 116-22-45")
@@ -78,6 +83,7 @@ class MessengerChatServiceApplicationTests {
 	static MessengerUser thirdUser = MessengerUser.builder()
 			.messengerUserId(3L)
 			.username("user3")
+			.password("Password123.")
 			.name("Mike")
 			.emailAddress("mike@gmail.com")
 			.phoneNumber("+44 456-75-45")
@@ -128,14 +134,34 @@ class MessengerChatServiceApplicationTests {
 			.chatUserRole(ChatUserRole.USER)
 			.build();
 
+	static String userAuthToken;
+	static String adminAuthToken;
+
+	static String chatUser11AuthToken;
+	static String chatUser22AuthToken;
 
 	@Test
-	@Order(1)
+	@Order(0)
+	void getAdminToken(){
+		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
+				.queryParam("username",firstUser.getUsername())
+				.queryParam("password",firstUser.getPassword())
+				.toUriString();
+		RequestEntity<?> requestEntity = RequestEntity.post(requestUri)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.build();
+		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
+		adminAuthToken = responseEntity.getHeaders().getFirst("access-token");
+		assertNotNull(adminAuthToken);
+	}
+
+	@Test
+	@Order(10)
 	void persistUsers() throws Exception{
 		MessengerUserDTO validUserDto1 = MessengerUserDTO.builder()
 				.username(firstUser.getUsername())
 				.name(firstUser.getName())
-				.password("1a83F_23.")
+				.password(firstUser.getPassword())
 				.surname(firstUser.getSurname())
 				.phoneNumber(firstUser.getPhoneNumber())
 				.email(firstUser.getEmailAddress())
@@ -144,7 +170,7 @@ class MessengerChatServiceApplicationTests {
 		MessengerUserDTO validUserDto2 = MessengerUserDTO.builder()
 				.username(secondUser.getUsername())
 				.name(secondUser.getName())
-				.password("1a83F_23.")
+				.password(secondUser.getPassword())
 				.surname(secondUser.getSurname())
 				.phoneNumber(secondUser.getPhoneNumber())
 				.email(secondUser.getEmailAddress())
@@ -153,7 +179,7 @@ class MessengerChatServiceApplicationTests {
 		MessengerUserDTO validUserDto3 = MessengerUserDTO.builder()
 				.username(thirdUser.getUsername())
 				.name(thirdUser.getName())
-				.password("1a83F_23.")
+				.password(thirdUser.getPassword())
 				.surname(thirdUser.getSurname())
 				.phoneNumber(thirdUser.getPhoneNumber())
 				.email(thirdUser.getEmailAddress())
@@ -162,18 +188,19 @@ class MessengerChatServiceApplicationTests {
 
 		ResponseEntity<MessengerUser> response;
 		try {
-			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(objectMapper.writeValueAsString(validUserDto1)), MessengerUser.class);
-			assertNotNull(response.getBody());
-			firstUser = response.getBody();
-
+			ResponseEntity<MessengerUser> firstUserPersisted = restTemplate.exchange(
+					RequestEntity.get(UriComponentsBuilder.fromUriString("/user").queryParam("username",firstUser.getUsername()).toUriString())
+							.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminAuthToken)
+							.build(), MessengerUser.class);
+			assertNotNull(firstUserPersisted);
+			firstUser = firstUserPersisted.getBody();
+			//No Auth required
 			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(objectMapper.writeValueAsString(validUserDto2)), MessengerUser.class);
 			assertNotNull(response.getBody());
 			secondUser = response.getBody();
-
+			//No Auth required
 			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(objectMapper.writeValueAsString(validUserDto3)), MessengerUser.class);
@@ -188,7 +215,31 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(2)
+	@Order(11)
+	void getUserToken(){
+
+		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
+				.queryParam("username",secondUser.getUsername())
+				.queryParam("password",secondUser.getPassword())
+				.toUriString();
+		RequestEntity<?> requestEntity = RequestEntity.post(requestUri)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.build();
+		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
+		userAuthToken = responseEntity.getHeaders().getFirst("access-token");
+		assertNotNull(userAuthToken);
+	}
+
+	@Test
+	@Order(12)
+	void testAuthentication(){
+
+		mockMvc.perform()
+
+	}
+
+	@Test
+	@Order(20)
 	void testCreateChat() throws Exception {
 		ChatDTO validChatDto1 = ChatDTO.builder()
 				.chatName(firstChat.getChatName())
@@ -250,7 +301,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(3)
+	@Order(30)
 	void testAddChatUser() throws Exception {
 
 		ChatUserDTO validDto1 = ChatUserDTO.builder()
@@ -334,7 +385,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(4)
+	@Order(40)
 	void testGetAllChatUsersByChat() throws Exception{
 		PageRequestDto firstPageOfSizeTwo = new PageRequestDto(0,2);
 		PageRequestDto secondPageOfSizeTwo = new PageRequestDto(1,2);
@@ -410,7 +461,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(5)
+	@Order(50)
 	void testModifyChatUser() throws Exception {
 
 		ChatUserDTO validDto = ChatUserDTO.builder()
@@ -481,7 +532,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(6)
+	@Order(60)
 	void testGetChatInfo() throws Exception {
 
 		mockMvc.perform(get("/chat")
@@ -512,7 +563,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(7)
+	@Order(70)
 	void testEditChatInfo() throws Exception {
 		ChatDTO validDto1 = ChatDTO.builder()
 				.chatId(firstChat.getChatId())
@@ -584,7 +635,7 @@ class MessengerChatServiceApplicationTests {
 	}
 
 	@Test
-	@Order(8)
+	@Order(80)
 	void testDeleteChatUser() throws Exception {
 		ChatUserDTO validDto1 = ChatUserDTO.builder()
 				.chatId(chatUser11.getChatId())

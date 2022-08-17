@@ -1,5 +1,8 @@
 server:
   port: 10002
+security:
+  basic:
+    enabled: false
 spring:
   data:
     jpa:

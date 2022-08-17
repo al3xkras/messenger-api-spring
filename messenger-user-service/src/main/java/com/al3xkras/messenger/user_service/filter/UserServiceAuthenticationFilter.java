@@ -9,7 +9,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -18,7 +17,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
-import java.util.stream.Collectors;
+
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.*;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
 public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -31,10 +32,8 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        log.info(username+" "+password);
+        String username = request.getParameter(USERNAME.value());
+        String password = request.getParameter(PASSWORD.value());
 
         if (username==null || password==null || username.isEmpty() || password.isEmpty())
             throw new BadCredentialsException("invalid credentials");
@@ -47,23 +46,21 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         MessengerUserDetails user = (MessengerUserDetails) authResult.getPrincipal();
-        log.info(user.getUsername());
-        //TODO remove hardcode
-        Algorithm algorithm = Algorithm.HMAC256("secretStringHardcoded");
+        Algorithm algorithm = getJwtAuthAlgorithm();
         String accessToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*60))
+                .withExpiresAt(new Date(System.currentTimeMillis()+ DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS))
                 .withIssuer(request.getRequestURI())
-                .withClaim("roles",user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
-                .withClaim("user-id", user.getMessengerUserId())
+                .withClaim(ROLES.value(), user.getMessengerUserType().name())
+                .withClaim(USER_ID.value(), user.getMessengerUserId())
                 .sign(algorithm);
         String refreshToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+1000L*60*60*24*30))
+                .withExpiresAt(new Date(System.currentTimeMillis()+ DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS))
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
-        //TODO remove hardcode
-        response.setHeader("access-token",accessToken);
-        response.setHeader("refresh-token",refreshToken);
+
+        response.setHeader(HEADER_ACCESS_TOKEN.value(), accessToken);
+        response.setHeader(HEADER_REFRESH_TOKEN.value(),refreshToken);
     }
 }

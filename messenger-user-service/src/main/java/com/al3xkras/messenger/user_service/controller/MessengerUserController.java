@@ -1,30 +1,36 @@
 package com.al3xkras.messenger.user_service.controller;
 
+import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.user_service.service.MessengerUserService;
-import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
+import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import java.util.Arrays;
+import java.util.HashSet;
 
 @Slf4j
 @RestController
 @RequestMapping("/user")
 public class MessengerUserController {
 
+    private final MessengerUserService messengerUserService;
+    private final HashSet<String> activeProfiles;
+
     @Autowired
-    private MessengerUserService messengerUserService;
-    @Value("${spring.profiles.active}")
-    private String profile;
+    public MessengerUserController(MessengerUserService messengerUserService, Environment env) {
+        this.messengerUserService = messengerUserService;
+        activeProfiles = new HashSet<>(Arrays.asList(env.getActiveProfiles()));
+    }
 
     @ExceptionHandler(MessengerUserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -56,7 +62,7 @@ public class MessengerUserController {
 
     @PostMapping
     public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
-        if (!profile.equals("no-security") && !messengerUserDto.getMessengerUserType().equals(MessengerUserType.USER))
+        if (!activeProfiles.contains("no-security") && !messengerUserDto.getMessengerUserType().equals(MessengerUserType.USER))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Messenger user of type ADMIN cannot be added");
 
         MessengerUser messengerUser = MessengerUser.builder()
@@ -100,12 +106,12 @@ public class MessengerUserController {
                                     @RequestParam(value = "username", required = false) String username)
                             throws MessengerUserNotFoundException{
         if (messengerUserId!=null){
-            if (!profile.equals("no-security") && messengerUserService.getUserTypeById(messengerUserId).equals(MessengerUserType.ADMIN))
+            if (!activeProfiles.contains("no-security") && messengerUserService.getUserTypeById(messengerUserId).equals(MessengerUserType.ADMIN))
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Messenger user of type ADMIN cannot be deleted");
             messengerUserService.deleteById(messengerUserId);
             return ResponseEntity.status(HttpStatus.OK).body("deleted user with id "+messengerUserId);
         } else if (username!=null){
-            if (!profile.equals("no-security") && messengerUserService.getUserTypeByUsername(username).equals(MessengerUserType.ADMIN))
+            if (!activeProfiles.contains("no-security") && messengerUserService.getUserTypeByUsername(username).equals(MessengerUserType.ADMIN))
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Messenger user of type ADMIN cannot be deleted");
             messengerUserService.deleteByUsername(username);
             return ResponseEntity.status(HttpStatus.OK).body("deleted user with username : \""+username+'\"');

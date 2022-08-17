@@ -35,6 +35,7 @@ class ChatRepositoryTest {
 
     static MessengerUser firstUser = MessengerUser.builder()
             .username("user1")
+            .password("Password123.")
             .name("Max")
             .emailAddress("max@gmail.com")
             .phoneNumber("111-22-33")
@@ -42,6 +43,7 @@ class ChatRepositoryTest {
             .build();
     static MessengerUser secondUser = MessengerUser.builder()
             .username("user2")
+            .password("Password123.")
             .name("Andrew")
             .emailAddress("andrew@gmail.com")
             .phoneNumber("116-22-345")
@@ -49,6 +51,7 @@ class ChatRepositoryTest {
             .build();
     static MessengerUser thirdUser = MessengerUser.builder()
             .username("user3")
+            .password("Password123.")
             .name("Mike")
             .emailAddress("mike@gmail.com")
             .phoneNumber("456-75-645")
