@@ -16,6 +16,7 @@ public class ChatUser {
     private Long userId;
     @Column(name = "title", columnDefinition = "nvarchar(20)")
     private String title;
+    @Enumerated(EnumType.STRING)
     @Column(name = "chat_user_role", nullable = false)
     private ChatUserRole chatUserRole;
     @ManyToOne(fetch = FetchType.EAGER)

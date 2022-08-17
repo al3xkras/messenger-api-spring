@@ -1,0 +1,75 @@
+package com.al3xkras.messenger.model.security;
+
+import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.MessengerUserType;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.ResourceBundle;
+
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+
+public class JwtTokenAuth {
+
+    public static final long DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS = 1000L*60*60;
+    public static final long DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS = 1000L*60*60*24*30;
+
+    private static final ResourceBundle authBundle = ResourceBundle.getBundle("messenger-auth");
+    private static final String jwtAuthSecret = authBundle.getString("jwt.secret");
+
+    private static final String WHITESPACE = " ";
+    public static final String PREFIX_WITH_WHITESPACE =  authBundle.getString("token.prefix")+WHITESPACE;
+
+    public enum Param {
+        //User Service Auth parameters
+        HEADER_REFRESH_TOKEN(authBundle.getString("header.refresh.token")),
+        HEADER_ACCESS_TOKEN(authBundle.getString("header.access_token")),
+        USERNAME(authBundle.getString("messenger_user.auth.username")),
+        USER_ID(authBundle.getString("messenger_user.auth.id")),
+        PASSWORD(authBundle.getString("messenger_user.auth.password")),
+        //Chat Service Auth parameters
+        USER_TOKEN(authBundle.getString("chat_user.auth.user_access_token")),
+        CHAT_NAME(authBundle.getString("chat_user.auth.chat_name")),
+        CHAT_ID(authBundle.getString("chat_user.auth.chat_id")),
+        ROLES(authBundle.getString("claim.roles"));
+        private final String value;
+        public String value(){
+            return value;
+        }
+        Param(String value) {
+            this.value=value;
+        }
+    }
+
+    public static MessengerUserAuthenticationToken verifyMessengerUserToken(String token) throws Exception {
+        Algorithm algorithm = Algorithm.HMAC256(jwtAuthSecret);
+        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+        DecodedJWT decodedJWT = jwtVerifier.verify(token);
+        String username = decodedJWT.getSubject();
+        long id = decodedJWT.getClaim(USER_ID.value()).asLong();
+        Collection<? extends GrantedAuthority> authorities = decodedJWT.getClaim(ROLES.value()).as(MessengerUserType.class)
+                .authorities();
+        return new MessengerUserAuthenticationToken(username,id,authorities);
+    }
+
+    public static ChatUserAuthenticationToken verifyChatUserToken(String token) throws Exception {
+        Algorithm algorithm = getJwtAuthAlgorithm();
+        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+        DecodedJWT decodedJWT = jwtVerifier.verify(token);
+        String[] subject = decodedJWT.getSubject().split(WHITESPACE,1);
+        String username = subject[0];
+        String chatName = subject[1];
+        long messengerUserId = decodedJWT.getClaim(USER_ID.value()).asLong();
+        Collection<? extends GrantedAuthority> authorities = decodedJWT.getClaim(ROLES.value()).as(ChatUserRole.class)
+                .authorities();
+        return new ChatUserAuthenticationToken(username,messengerUserId,chatName,authorities);
+    }
+
+    public static Algorithm getJwtAuthAlgorithm(){
+        return Algorithm.HMAC256(jwtAuthSecret);
+    }
+}
