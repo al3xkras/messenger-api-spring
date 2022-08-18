@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.user_service.filter;
 
+import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.model.MessengerUserDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

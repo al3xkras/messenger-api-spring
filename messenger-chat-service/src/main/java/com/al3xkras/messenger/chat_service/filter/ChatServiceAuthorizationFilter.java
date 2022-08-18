@@ -49,7 +49,6 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
         }
 
         Collection<GrantedAuthority> authorities = authToken.getAuthorities();
-        log.info(authorities.toString());
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod().toUpperCase());
         String messageForbidden = "forbidden: ("+method+") "+uri;

@@ -20,7 +20,6 @@ public class MessengerUserServiceApplication {
 		return new RestTemplate();
 	}
 
-
 	@Bean
 	public PasswordEncoder passwordEncoder(){
 		//TODO replace with bcrypt

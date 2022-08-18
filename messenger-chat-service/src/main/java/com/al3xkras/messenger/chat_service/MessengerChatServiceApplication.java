@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.chat_service;
 
+import com.al3xkras.messenger.chat_service.model.JwtAccessTokens;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -20,7 +21,10 @@ public class MessengerChatServiceApplication {
 		return new RestTemplate();
 	}
 
-
+	@Bean
+	public JwtAccessTokens jwtAccessTokens(){
+		return new JwtAccessTokens();
+	}
 
 	@Bean
 	public PasswordEncoder passwordEncoder(){

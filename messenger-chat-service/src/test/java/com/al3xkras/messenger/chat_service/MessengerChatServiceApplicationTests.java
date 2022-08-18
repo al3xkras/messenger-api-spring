@@ -14,6 +14,7 @@ import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.model.RestResponsePage;
 import com.al3xkras.messenger.chat_service.service.ChatService;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -58,27 +60,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("no-security")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MessengerChatServiceApplicationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
+	@PersistenceContext
+	private EntityManager entityManager;
+
 	@Autowired
 	private RestTemplate restTemplate;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	static MessengerUser firstUser = MessengerUser.builder()
-			.messengerUserId(1L)
-			.username("user1")
-			.password("Password123.")
-			.name("Max")
-			.emailAddress("max@gmail.com")
-			.phoneNumber("+43 111-22-33")
-			.messengerUserType(MessengerUserType.ADMIN)
-			.build();
+	static MessengerUser firstUser = MessengerUser.FIRST_ADMIN;
+
 	static MessengerUser secondUser = MessengerUser.builder()
 			.messengerUserId(2L)
 			.username("user2")
@@ -145,6 +142,7 @@ class MessengerChatServiceApplicationTests {
 	static String userAuthToken="";
 	static String adminAuthToken="";
 
+	static String anonymousUserToken;
 	static String chatUser11AuthToken;
 	static String chatUser22AuthToken;
 
@@ -152,14 +150,14 @@ class MessengerChatServiceApplicationTests {
 	@Order(0)
 	void getAdminToken(){
 		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
-				.queryParam("username",firstUser.getUsername())
-				.queryParam("password",firstUser.getPassword())
+				.queryParam(USERNAME.value(),firstUser.getUsername())
+				.queryParam(PASSWORD.value(),firstUser.getPassword())
 				.toUriString();
 		RequestEntity<?> requestEntity = RequestEntity.post(requestUri)
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.build();
 		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
-		adminAuthToken = responseEntity.getHeaders().getFirst("access-token");
+		adminAuthToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
 		assertNotNull(adminAuthToken);
 	}
 
@@ -224,23 +222,26 @@ class MessengerChatServiceApplicationTests {
 	@Test
 	@Order(11)
 	void getUserToken(){
-
 		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
-				.queryParam("username",secondUser.getUsername())
-				.queryParam("password",secondUser.getPassword())
+				.queryParam(USERNAME.value(),secondUser.getUsername())
+				.queryParam(PASSWORD.value(),secondUser.getPassword())
 				.toUriString();
 		RequestEntity<?> requestEntity = RequestEntity.post(requestUri)
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.build();
 		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
-		userAuthToken = responseEntity.getHeaders().getFirst("access-token");
+		userAuthToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
 		assertNotNull(userAuthToken);
 	}
 
 	@Test
 	@Order(12)
-	void testAuthentication(){
-
+	void testAuthentication() throws Exception {
+		MockHttpServletResponse response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(),userAuthToken))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		anonymousUserToken = response.getHeader(HEADER_ACCESS_TOKEN.value());
 	}
 
 	@Test

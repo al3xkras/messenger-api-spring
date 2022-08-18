@@ -66,29 +66,35 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
             unsuccessfulAuthentication(request,response,failed);
             return;
         }
-        long chatId;
-        try {
-            chatId=chatService.getChatIdByChatName(authToken.getChatName());
-        }catch (ChatNotFoundException e){
-            log.warn("chat not found: \""+authToken.getChatName()+'"');
-            unsuccessfulAuthentication(request, response, new ChatServiceAuthenticationException("chat not found: \""+authToken.getChatName()+'"'));
-            return;
-        }
-        ChatUser chatUser;
-        try {
-            ChatUserId id = new ChatUserId(chatId,authToken.getUserId());
-            chatUser = chatService.findChatUserById(id);
-        } catch (ChatUserNotFoundException e){
-            log.warn("chat user not found:" +
-                    " chat: "+authToken.getChatName()+
-                    " user: "+authToken.getUsername());
-            response.sendError(HttpStatus.FORBIDDEN.value(),"chat user not found");
-            return;
+
+        boolean isAnonymousChatUserAuth = authToken.getChatName().equals(CHAT_NAME.value());
+
+        long chatId = -1L;
+        ChatUser chatUser = null;
+        if (!isAnonymousChatUserAuth){
+            try {
+                chatId=chatService.getChatIdByChatName(authToken.getChatName());
+            }catch (ChatNotFoundException e){
+                log.warn("chat not found: \""+authToken.getChatName()+'"');
+                unsuccessfulAuthentication(request, response, new ChatServiceAuthenticationException("chat not found: \""+authToken.getChatName()+'"'));
+                return;
+            }
+            try {
+                ChatUserId id = new ChatUserId(chatId,authToken.getUserId());
+                chatUser = chatService.findChatUserById(id);
+            } catch (ChatUserNotFoundException e){
+                log.warn("chat user not found:" +
+                        " chat: "+authToken.getChatName()+
+                        " user: "+authToken.getUsername());
+                response.sendError(HttpStatus.FORBIDDEN.value(),"chat user not found");
+                return;
+            }
         }
 
         ChatUserAuthenticationToken authResult = new ChatUserAuthenticationToken(authToken.getUsername(),authToken.getUserId(),authToken.getChatName(),Collections.emptyList());
-        authResult.setChatId(chatId);
-        if (authToken.getChatUserRole()==null){
+        if (!isAnonymousChatUserAuth)
+            authResult.setChatId(chatId);
+        if (!isAnonymousChatUserAuth && authToken.getChatUserRole()==null){
             authResult.setChatUserRole(chatUser.getChatUserRole());
         } else {
             authResult.setChatUserRole(authToken.getChatUserRole());
@@ -102,10 +108,11 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         String userAuth = request.getParameter(USER_TOKEN.value());
         String chatName = request.getParameter(CHAT_NAME.value());
 
-        if (userAuth==null || userAuth.isEmpty() ||
-                chatName==null || chatName.isEmpty()) {
-            log.warn("user auth token or chat name is null");
+        if (userAuth==null || userAuth.isEmpty() || chatName==null) {
+            log.warn("user auth token is null");
             throw new BadCredentialsException("invalid credentials");
+        } else if (chatName.isEmpty()){
+            chatName = CHAT_NAME.value();
         }
 
         String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
@@ -122,9 +129,12 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
             log.warn("invalid user auth token");
             throw new BadCredentialsException("invalid user auth token");
         }
+
         ChatUserAuthenticationToken chatUserAuthenticationToken =
                 new ChatUserAuthenticationToken(userAuthToken.getUsername(),userAuthToken.getMessengerUserId(),chatName,Collections.emptyList());
-        if (userAuthToken.getMessengerUserType().equals(MessengerUserType.ADMIN)){
+        if (chatName.equals(CHAT_NAME.value())){
+            chatUserAuthenticationToken.setChatUserRole(ChatUserRole.ANONYMOUS);
+        } else if (userAuthToken.getMessengerUserType().equals(MessengerUserType.ADMIN)){
             chatUserAuthenticationToken.setChatUserRole(ChatUserRole.SUPER_ADMIN);
         }
         return chatUserAuthenticationToken;

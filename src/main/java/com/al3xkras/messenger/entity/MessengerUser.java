@@ -6,6 +6,16 @@ import javax.persistence.*;
 @Entity
 @Table(name = "messenger_user", uniqueConstraints = @UniqueConstraint(name = "messenger_user_username_un", columnNames = {"username"}))
 public class MessengerUser {
+    @Transient
+    public static MessengerUser FIRST_ADMIN = MessengerUser.builder()
+            .username("admin")
+            .password("Password123.")
+            .messengerUserType(MessengerUserType.ADMIN)
+            .name("admin")
+            .emailAddress("")
+            .phoneNumber("")
+            .build();
+
     @Id
     @SequenceGenerator(name = "messenger_user_seq", sequenceName = "messenger_user_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "messenger_user_seq")

@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.chat_service.controller;
 
 import com.al3xkras.messenger.chat_service.exception.*;
+import com.al3xkras.messenger.chat_service.model.JwtAccessTokens;
 import com.al3xkras.messenger.chat_service.service.ChatService;
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
@@ -8,11 +9,15 @@ import com.al3xkras.messenger.dto.PageRequestDto;
 import com.al3xkras.messenger.entity.Chat;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.net.URI;
 
+@Slf4j
 @RestController
 public class ChatController {
 
@@ -31,6 +37,8 @@ public class ChatController {
     private ChatService chatService;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private JwtAccessTokens accessTokens;
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e){
@@ -66,14 +74,25 @@ public class ChatController {
     }
 
     private MessengerUser getMessengerUserById(Long id) throws ResponseStatusException{
+        String accessToken;
+        try {
+            accessToken = accessTokens.getUserServiceAccessToken();
+        } catch (Exception e){
+            log.warn("user service auth failed",e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"unable to access user service");
+        }
+
         URI uri = URI.create("http://localhost:10001/user/"+id);
+        RequestEntity<?> requestEntity = RequestEntity.get(uri)
+                .header(HttpHeaders.AUTHORIZATION,JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)
+                .build();
         MessengerUser user;
         try {
-            user = restTemplate.getForObject(uri,MessengerUser.class);
+            user = restTemplate.exchange(requestEntity,MessengerUser.class).getBody();
         } catch (HttpClientErrorException e){
             throw new ResponseStatusException(e.getStatusCode(),e.getMessage());
         } catch (ResourceAccessException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"user service is down");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"unable to access user service");
         }
         if (user==null)
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"user service error");
@@ -83,6 +102,10 @@ public class ChatController {
     @PostMapping("/chat")
     public Chat createChat(@RequestBody @Valid ChatDTO chatDTO)
             throws ChatNameAlreadyExistsException,InvalidMessengerUserException{
+        if (chatDTO.getChatName().equals(JwtTokenAuth.Param.CHAT_NAME.value())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Chat name \""+JwtTokenAuth.Param.CHAT_NAME.value()+"\" is" +
+                    " not allowed. Please choose another one.");
+        }
         Chat chat = Chat.builder()
                 .chatName(chatDTO.getChatName())
                 .chatDisplayName(chatDTO.getDisplayName())

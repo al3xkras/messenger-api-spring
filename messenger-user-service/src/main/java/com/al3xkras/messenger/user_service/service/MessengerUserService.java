@@ -5,6 +5,7 @@ import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.repository.MessengerUserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.annotation.PostConstruct;
+
+@Slf4j
 @Service
 public class MessengerUserService {
 
@@ -114,5 +118,13 @@ public class MessengerUserService {
     public MessengerUserType getUserTypeByUsername(String username) throws MessengerUserNotFoundException {
         return messengerUserRepository.getUserTypeByUsername(username)
                 .orElseThrow(MessengerUserNotFoundException::new);
+    }
+
+    @PostConstruct
+    private void postConstruct(){
+        try {
+            saveUser(MessengerUser.FIRST_ADMIN);
+            log.info("saved: "+MessengerUser.FIRST_ADMIN.toString());
+        } catch (MessengerUserAlreadyExistsException ignored){}
     }
 }
