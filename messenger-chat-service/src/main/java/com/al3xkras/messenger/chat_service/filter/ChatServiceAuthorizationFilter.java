@@ -2,6 +2,7 @@ package com.al3xkras.messenger.chat_service.filter;
 
 import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
 import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,7 +26,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
 
-        if (uri.equals("/auth")){
+        if (uri.equals("/auth") || uri.equals("/error")){
             filterChain.doFilter(request,response);
             log.info("authorization filter ignored for URI: "+uri);
             return;
@@ -38,8 +39,17 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        ChatUserAuthenticationToken authToken = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        ChatUserAuthenticationToken authToken;
+        try {
+            authToken = JwtTokenAuth.verifyChatUserToken(authHeader.substring(prefix.length()));
+        } catch (Exception e){
+            log.warn("invalid auth token",e);
+            response.sendError(HttpStatus.FORBIDDEN.value(),"bad auth token");
+            return;
+        }
+
         Collection<GrantedAuthority> authorities = authToken.getAuthorities();
+        log.info(authorities.toString());
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod().toUpperCase());
         String messageForbidden = "forbidden: ("+method+") "+uri;
@@ -95,6 +105,9 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
                 }
                 if (!((readingSelfChats && authorities.contains(ChatUserAuthority.READ_SELF_CHATS_INFO)) ||
                         (!readingSelfChats && authorities.contains(ChatUserAuthority.READ_ANY_CHATS_INFO_EXCEPT_SELF)))){
+                    log.info(authorities.toString());
+                    log.info("self: "+readingSelfChats);
+                    log.info(authToken.getChatUserRole().name());
                     log.warn(messageForbidden);
                     response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
                     return;
@@ -162,6 +175,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
             }
         }
 
+        SecurityContextHolder.getContext().setAuthentication(authToken);
         filterChain.doFilter(request,response);
     }
 }

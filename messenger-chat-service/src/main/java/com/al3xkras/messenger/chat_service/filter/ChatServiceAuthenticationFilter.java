@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
 import javax.servlet.FilterChain;
@@ -37,16 +36,23 @@ import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     private final ChatService chatService;
-
-    public ChatServiceAuthenticationFilter(String url, ChatService chatService) {
-        super(url);
+    private String filterProcessesUrl;
+    public ChatServiceAuthenticationFilter(String filterProcessesUrl, ChatService chatService) {
+        super(filterProcessesUrl);
+        this.filterProcessesUrl = filterProcessesUrl;
         this.chatService = chatService;
+    }
+
+    @Override
+    public void setFilterProcessesUrl(String filterProcessesUrl) {
+        super.setFilterProcessesUrl(filterProcessesUrl);
+        this.filterProcessesUrl=filterProcessesUrl;
     }
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
-        if (request.getRequestURI().equals("/error")){
+        if (!request.getRequestURI().equals(filterProcessesUrl)){
             log.warn("authentication filter ignored for request: "+request.getRequestURI());
             filterChain.doFilter(req,res);
             return;
@@ -79,14 +85,20 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
             response.sendError(HttpStatus.FORBIDDEN.value(),"chat user not found");
             return;
         }
-        authToken.setChatId(chatId);
-        authToken.getAuthorities().addAll(chatUser.getChatUserRole().authorities());
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-        successfulAuthentication(request,response,filterChain,authToken);
+
+        ChatUserAuthenticationToken authResult = new ChatUserAuthenticationToken(authToken.getUsername(),authToken.getUserId(),authToken.getChatName(),Collections.emptyList());
+        authResult.setChatId(chatId);
+        if (authToken.getChatUserRole()==null){
+            authResult.setChatUserRole(chatUser.getChatUserRole());
+        } else {
+            authResult.setChatUserRole(authToken.getChatUserRole());
+        }
+
+        successfulAuthentication(request,response,filterChain,authResult);
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String userAuth = request.getParameter(USER_TOKEN.value());
         String chatName = request.getParameter(CHAT_NAME.value());
 

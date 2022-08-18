@@ -62,7 +62,7 @@ public class JwtTokenAuth {
         Algorithm algorithm = getJwtAuthAlgorithm();
         JWTVerifier jwtVerifier = JWT.require(algorithm).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(token);
-        String[] subject = decodedJWT.getSubject().split(WHITESPACE,1);
+        String[] subject = decodedJWT.getSubject().split(WHITESPACE,2);
         String username = subject[0];
         String chatName = subject[1];
         long messengerUserId = decodedJWT.getClaim(USER_ID.value()).asLong();
