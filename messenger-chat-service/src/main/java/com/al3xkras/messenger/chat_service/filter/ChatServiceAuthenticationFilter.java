@@ -74,6 +74,7 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         if (!isAnonymousChatUserAuth){
             try {
                 chatId=chatService.getChatIdByChatName(authToken.getChatName());
+                log.info("Chat id: "+chatId);
             }catch (ChatNotFoundException e){
                 log.warn("chat not found: \""+authToken.getChatName()+'"');
                 unsuccessfulAuthentication(request, response, new ChatServiceAuthenticationException("chat not found: \""+authToken.getChatName()+'"'));
@@ -108,10 +109,11 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         String userAuth = request.getParameter(USER_TOKEN.value());
         String chatName = request.getParameter(CHAT_NAME.value());
 
-        if (userAuth==null || userAuth.isEmpty() || chatName==null) {
+        if (userAuth==null || userAuth.isEmpty()) {
             log.warn("user auth token is null");
             throw new BadCredentialsException("invalid credentials");
-        } else if (chatName.isEmpty()){
+        }
+        if (chatName==null || chatName.isEmpty()){
             chatName = CHAT_NAME.value();
         }
 

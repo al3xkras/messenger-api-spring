@@ -35,7 +35,7 @@ public class JwtAccessTokens {
         String uri = "http://localhost:10001/user/login";
         String refreshUri = "http://localhost:10001/user/refresh";
 
-        if (userServiceAccessToken!=null){
+        if (userServiceAccessToken!=null && userServiceRefreshToken!=null){
             if (jwtVerifier.verify(userServiceAccessToken).getExpiresAt().after(new Date(System.currentTimeMillis()+30*1000L))){
                 try {
                     userServiceAccessToken = refreshToken(userServiceRefreshToken,refreshUri, jwtVerifier);
@@ -58,7 +58,7 @@ public class JwtAccessTokens {
         ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
         String accessToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
         String refreshToken = responseEntity.getHeaders().getFirst(HEADER_REFRESH_TOKEN.value());
-        if (accessToken==null)
+        if (accessToken==null || refreshToken==null)
             throw new IllegalStateException("user service access or refresh token is null");
         userServiceAccessToken = accessToken;
         userServiceRefreshToken = refreshToken;
@@ -77,7 +77,7 @@ public class JwtAccessTokens {
         ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
         String accessToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
         if (accessToken==null)
-            throw new IllegalStateException("user service access or refresh token is null");
+            throw new IllegalStateException("user service access token is null");
         return accessToken;
     }
 

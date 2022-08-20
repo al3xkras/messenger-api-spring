@@ -15,7 +15,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -45,14 +44,7 @@ class MessengerUserServiceApplicationTests {
 		return usernamePrefix+(usernameNext++);
 	}
 
-	static MessengerUser firstUser = MessengerUser.builder()
-			.username(nextUniqueUsername())
-			.password("Password123.")
-			.name("Max")
-			.emailAddress("max@gmail.com")
-			.phoneNumber("+48 111-22-33")
-			.messengerUserType(MessengerUserType.ADMIN)
-			.build();
+	static MessengerUser firstUser = MessengerUser.FIRST_ADMIN;
 	static MessengerUser secondUser = MessengerUser.builder()
 			.messengerUserId(2L)
 			.username(nextUniqueUsername())
@@ -94,14 +86,6 @@ class MessengerUserServiceApplicationTests {
 				.andReturn().getResponse();
 		adminToken = response.getHeader("access-token");
 		assertNotNull(adminToken);
-	}
-
-	@Test
-	@Order(0)
-	@Transactional
-	@Commit
-	void createAdmin() {
-		entityManager.persist(firstUser);
 	}
 
 	@Test
@@ -337,12 +321,13 @@ class MessengerUserServiceApplicationTests {
 	@Order(4)
 	void testEditUserData() throws Exception {
 
+		String validPhone = "+23 245-44-29";
 		MessengerUserDTO validDto1 = MessengerUserDTO.builder()
 				.username("username")
 				.name(firstUser.getName())
 				.password("1a83F_234567$")
 				.surname(firstUser.getSurname())
-				.phoneNumber(firstUser.getPhoneNumber())
+				.phoneNumber(validPhone)
 				.email(firstUser.getEmailAddress())
 				.messengerUserType(firstUser.getMessengerUserType())
 				.build();
@@ -351,7 +336,7 @@ class MessengerUserServiceApplicationTests {
 				.name(firstUser.getName())
 				.password("1a83F_23.")
 				.surname("new Surname")
-				.phoneNumber(firstUser.getPhoneNumber())
+				.phoneNumber(validPhone)
 				.email(firstUser.getEmailAddress())
 				.messengerUserType(firstUser.getMessengerUserType())
 				.build();

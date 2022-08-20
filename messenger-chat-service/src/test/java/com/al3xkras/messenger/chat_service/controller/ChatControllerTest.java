@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.chat_service.controller;
 
+import com.al3xkras.messenger.chat_service.model.JwtAccessTokens;
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
 import com.al3xkras.messenger.dto.PageRequestDto;
@@ -8,8 +9,10 @@ import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.chat_service.service.ChatService;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,13 +22,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -43,6 +50,8 @@ class ChatControllerTest {
     private ChatService chatService;
     @MockBean
     private RestTemplate restTemplate;
+    @MockBean
+    private JwtAccessTokens accessTokens;
 
     static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -102,10 +111,15 @@ class ChatControllerTest {
                 .username("user1")
                 .build();
 
+        String accessToken = "someToken ______";
         URI uri = URI.create("http://localhost:10001/user/"+1L);
-
-        Mockito.when(restTemplate.getForObject(uri,MessengerUser.class))
-                .thenReturn(creator);
+        RequestEntity<?> requestEntity = RequestEntity.get(uri)
+                .header(HttpHeaders.AUTHORIZATION, JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)
+                .build();
+        Mockito.when(accessTokens.getUserServiceAccessToken())
+                .thenReturn(accessToken);
+        Mockito.when(restTemplate.exchange(requestEntity,MessengerUser.class))
+                .thenReturn(ResponseEntity.of(Optional.of(creator)));
         Mockito.when(chatService.saveChat(chatToCreate,creator))
                 .thenReturn(chatCreated);
 

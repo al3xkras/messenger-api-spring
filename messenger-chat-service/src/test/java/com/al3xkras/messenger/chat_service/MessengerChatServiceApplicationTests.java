@@ -1,8 +1,6 @@
 package com.al3xkras.messenger.chat_service;
 
-import com.al3xkras.messenger.chat_service.config.SecurityConfig;
-import com.al3xkras.messenger.chat_service.controller.ChatController;
-import com.al3xkras.messenger.chat_service.repository.ChatRepository;
+import com.al3xkras.messenger.chat_service.model.JwtAccessTokens;
 import com.al3xkras.messenger.dto.ChatDTO;
 import com.al3xkras.messenger.dto.ChatUserDTO;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
@@ -19,30 +17,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.filter.TypeExcludeFilters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityManager;
@@ -71,6 +60,8 @@ class MessengerChatServiceApplicationTests {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	@Autowired
+	private JwtAccessTokens accessTokens;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -114,51 +105,71 @@ class MessengerChatServiceApplicationTests {
 			.chatUserRole(ChatUserRole.ADMIN)
 			.build();
 
-	static ChatUser chatUser12 = ChatUser.builder()
-			.chat(firstChat)
-			.messengerUser(secondUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
+	static ChatUser chatUser12;
+	static ChatUser chatUser21;
+	static ChatUser chatUser22;
+	static ChatUser chatUser23;
 
-	static ChatUser chatUser21 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(secondUser)
-			.title(ChatService.DEFAULT_TITLE_ADMIN)
-			.chatUserRole(ChatUserRole.ADMIN)
-			.build();
+	static void initChatUsers(){
+		firstUser.setMessengerUserId(1L);
+		chatUser11 = ChatUser.builder()
+				.chat(firstChat)
+				.messengerUser(firstUser)
+				.title(ChatService.DEFAULT_TITLE_ADMIN)
+				.chatUserRole(ChatUserRole.ADMIN)
+				.build();
 
-	static ChatUser chatUser22 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(firstUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
+		chatUser12 = ChatUser.builder()
+				.chat(firstChat)
+				.messengerUser(secondUser)
+				.chatUserRole(ChatUserRole.USER)
+				.build();
 
-	static ChatUser chatUser23 = ChatUser.builder()
-			.chat(secondChat)
-			.messengerUser(thirdUser)
-			.chatUserRole(ChatUserRole.USER)
-			.build();
+		chatUser21 = ChatUser.builder()
+				.chat(secondChat)
+				.messengerUser(secondUser)
+				.title(ChatService.DEFAULT_TITLE_ADMIN)
+				.chatUserRole(ChatUserRole.ADMIN)
+				.build();
 
-	static String userAuthToken="";
-	static String adminAuthToken="";
+		chatUser22 = ChatUser.builder()
+				.chat(secondChat)
+				.messengerUser(firstUser)
+				.chatUserRole(ChatUserRole.USER)
+				.build();
 
-	static String anonymousUserToken;
-	static String chatUser11AuthToken;
-	static String chatUser22AuthToken;
+		chatUser23 = ChatUser.builder()
+				.chat(secondChat)
+				.messengerUser(thirdUser)
+				.chatUserRole(ChatUserRole.USER)
+				.build();
+	}
+
+	static String secondUserTokenOfTypeUser;
+	static String firstUserTokenOfTypeAdmin;
+
+	static String noChatSecondUserToken;
+	static String noChatFirstUserToken;
+
+	static String firstChatAdminAuthToken;
+	static String secondChatAdminAuthToken;
+	static String firstChatUserAuthToken;
+	static String secondChatSuperAdminAuthToken;
 
 	@Test
+	@Transactional
+	@Commit
 	@Order(0)
-	void getAdminToken(){
-		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
-				.queryParam(USERNAME.value(),firstUser.getUsername())
-				.queryParam(PASSWORD.value(),firstUser.getPassword())
-				.toUriString();
-		RequestEntity<?> requestEntity = RequestEntity.post(requestUri)
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-				.build();
-		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
-		adminAuthToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
-		assertNotNull(adminAuthToken);
+	void createFirstAdminIfNotExists(){
+		try {
+			entityManager.persist(firstUser);
+		} catch (DataIntegrityViolationException ignored){}
+	}
+
+	@Test
+	@Order(1)
+	void getAdminToken() throws Exception {
+		firstUserTokenOfTypeAdmin = JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessTokens.getUserServiceAccessToken();
 	}
 
 	@Test
@@ -194,9 +205,10 @@ class MessengerChatServiceApplicationTests {
 
 		ResponseEntity<MessengerUser> response;
 		try {
-			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(objectMapper.writeValueAsString(validUserDto1)), MessengerUser.class);
+			response = restTemplate.exchange(RequestEntity
+						.get("http://localhost:10001/user?username="+firstUser.getUsername())
+						.header(HttpHeaders.AUTHORIZATION, firstUserTokenOfTypeAdmin).build(),
+					MessengerUser.class);
 			assertNotNull(response);
 			firstUser = response.getBody();
 			//No Auth required
@@ -214,8 +226,6 @@ class MessengerChatServiceApplicationTests {
 
 		} catch (ResourceAccessException r){
 			log.error("messenger user service is down. please enable it");
-		} catch (HttpClientErrorException e){
-			e.printStackTrace();
 		}
 	}
 
@@ -230,18 +240,23 @@ class MessengerChatServiceApplicationTests {
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.build();
 		ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
-		userAuthToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
-		assertNotNull(userAuthToken);
+		secondUserTokenOfTypeUser = JwtTokenAuth.PREFIX_WITH_WHITESPACE+responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
 	}
 
 	@Test
 	@Order(12)
 	void testAuthentication() throws Exception {
+		log.info("secondUserToken: "+ secondUserTokenOfTypeUser);
 		MockHttpServletResponse response = mockMvc.perform(post("/auth")
-						.param(USER_TOKEN.value(),userAuthToken))
+						.param(USER_TOKEN.value(), secondUserTokenOfTypeUser))
 				.andExpect(status().isOk())
 				.andReturn().getResponse();
-		anonymousUserToken = response.getHeader(HEADER_ACCESS_TOKEN.value());
+		noChatSecondUserToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+		response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), firstUserTokenOfTypeAdmin))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		noChatFirstUserToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
 	}
 
 	@Test
@@ -265,57 +280,111 @@ class MessengerChatServiceApplicationTests {
 				.displayName("Chat 3")
 				.ownerId(secondUser.getMessengerUserId())
 				.build();
+		ChatDTO invalidChatNameDto2 = ChatDTO.builder()
+				.chatName(CHAT_NAME.value())
+				.displayName("Chat 3")
+				.ownerId(secondUser.getMessengerUserId())
+				.build();
 
 		ChatDTO noDisplayNameChatDTO = ChatDTO.builder()
 				.chatId(4L)
 				.chatName("chat3")
-				.ownerId(thirdUser.getMessengerUserId())
+				.ownerId(secondUser.getMessengerUserId())
 				.build();
 
 		ChatDTO existingChatNameDto = validChatDto1;
 
 		mockMvc.perform(post("/chat")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(validChatDto1)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validChatDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatSecondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validChatDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validChatDto1)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(firstChat)));
 
 		mockMvc.perform(post("/chat")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validChatDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validChatDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatSecondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validChatDto2)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondChat)));
 
 		mockMvc.perform(post("/chat")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(invalidChatNameDto)))
+						.header(HttpHeaders.AUTHORIZATION, noChatSecondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidChatNameDto)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatSecondUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidChatNameDto2)))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatSecondUserToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(noDisplayNameChatDTO)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(existingChatNameDto)))
 				.andExpect(status().isBadRequest());
 
-		mockMvc.perform(post("/chat"))
+		mockMvc.perform(post("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken))
 				.andExpect(status().isBadRequest());
 
+		mockMvc.perform(post("/chat"))
+				.andExpect(status().isForbidden());
+
+	}
+
+	@Test
+	@Order(25)
+	void authenticateChatAdmins() throws Exception {
+		MockHttpServletResponse response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), firstUserTokenOfTypeAdmin)
+						.param(CHAT_NAME.value(), firstChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		firstChatAdminAuthToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+
+		response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), secondUserTokenOfTypeUser)
+						.param(CHAT_NAME.value(), secondChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		secondChatAdminAuthToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
 	}
 
 	@Test
 	@Order(30)
 	void testAddChatUser() throws Exception {
-
-		ChatUserDTO validDto1 = ChatUserDTO.builder()
-				.chatId(chatUser11.getChatId())
-				.userId(chatUser11.getUserId())
-				.title(chatUser11.getTitle())
-				.chatUserRole(chatUser11.getChatUserRole())
-				.build();
+		initChatUsers();
 		ChatUserDTO validDto2 = ChatUserDTO.builder()
 				.chatId(chatUser12.getChatId())
 				.userId(chatUser12.getUserId())
@@ -323,8 +392,8 @@ class MessengerChatServiceApplicationTests {
 				.chatUserRole(chatUser12.getChatUserRole())
 				.build();
 		ChatUserDTO validDto4 = ChatUserDTO.builder()
-				.chatId(chatUser22.getChatId())
-				.userId(chatUser22.getUserId())
+				.chatId(chatUser22.getChat().getChatId())
+				.userId(chatUser22.getMessengerUser().getMessengerUserId())
 				.title(chatUser22.getTitle())
 				.chatUserRole(chatUser22.getChatUserRole())
 				.build();
@@ -348,42 +417,103 @@ class MessengerChatServiceApplicationTests {
 				.userId(thirdUser.getMessengerUserId())
 				.title("title")
 				.build();
-		ChatUserDTO existingChatUserDto = validDto1;
+		ChatUserDTO existingChatUserDto = ChatUserDTO.builder()
+				.chatId(chatUser11.getChatId())
+				.userId(chatUser11.getUserId())
+				.title(chatUser11.getTitle())
+				.chatUserRole(chatUser11.getChatUserRole())
+				.build();
 
 		mockMvc.perform(post("/chat/users")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto2)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(chatUser12)));
 
+		// chatUser22 does not exist
+		mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), firstUserTokenOfTypeAdmin)
+						.param(CHAT_NAME.value(), secondChat.getChatName()))
+				.andExpect(status().isForbidden());
+
 		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto4)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(chatUser22)));
+		// chatUser22 was added
+
+
+		MockHttpServletResponse response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), firstUserTokenOfTypeAdmin)
+						.param(CHAT_NAME.value(), secondChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		secondChatSuperAdminAuthToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+
 
 		mockMvc.perform(post("/chat/users")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto5)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto5)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, secondChatSuperAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto5)))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(chatUser23)));
 
 		mockMvc.perform(post("/chat/users")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(invalidIdChatUserDto1)))
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidIdChatUserDto1)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidIdChatUserDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(invalidIdChatUserDto2)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(post("/chat/users")
 						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidIdChatUserDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(nullUserRoleChatDto)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(post("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(existingChatUserDto)))
 				.andExpect(status().isBadRequest());
@@ -413,12 +543,31 @@ class MessengerChatServiceApplicationTests {
 						.param("chat-id",secondChat.getChatId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.param("chat-id",secondChat.getChatId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",secondChat.getChatId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isOk());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, secondChatSuperAdminAuthToken)
+						.param("chat-id",secondChat.getChatId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
 				.andExpect(status().isOk())
 				.andDo(result -> actualPage[0] =
 						objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<RestResponsePage<ChatUser>>(){}));
 		assertEquals(new HashSet<>(page1), new HashSet<>(actualPage[0].toList()));
 
 		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
 						.param("chat-name", secondChat.getChatName())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(secondPageOfSizeTwo)))
@@ -432,22 +581,66 @@ class MessengerChatServiceApplicationTests {
 						.param("chat-name", "thisWillBeIgnored")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(pageOfSizeThree)))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, secondChatSuperAdminAuthToken)
+						.param("chat-id", firstChat.getChatId().toString())
+						.param("chat-name", "thisWillBeIgnored")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(pageOfSizeThree)))
+				.andExpect(status().isOk());
+
+		MockHttpServletResponse response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), secondUserTokenOfTypeUser)
+						.param(CHAT_NAME.value(), firstChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		firstChatUserAuthToken = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
+						.param("chat-id", firstChat.getChatId().toString())
+						.param("chat-name", "thisWillBeIgnored")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(pageOfSizeThree)))
 				.andExpect(status().isOk())
 				.andDo(result -> actualPage[0] =
 						objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<RestResponsePage<ChatUser>>(){}));
 		assertEquals(new HashSet<>(page3), new HashSet<>(actualPage[0].toList()));
 
 		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
-				.andExpect(status().isBadRequest())
-				.andExpect(content().string("please specify \"chat-id\" or \"chat-name\""));
+				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(get("/chat/users")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, secondChatSuperAdminAuthToken)
 						.param("chat-id",secondChat.getChatId().toString()))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",secondChat.getChatId().toString()))
+				.andExpect(status().isBadRequest());
+
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
+						.param("chat-id",secondChat.getChatId().toString()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/chat/users")
+						.param("chat-id","999")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.param("chat-id","999")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
@@ -457,6 +650,13 @@ class MessengerChatServiceApplicationTests {
 		assertEquals(new HashSet<>(actualPage[0].toList()), new HashSet<>());
 
 		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION, secondUserTokenOfTypeUser)
+						.param("chat-name","chatName182")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.param("chat-name","chatName182")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(firstPageOfSizeTwo)))
@@ -473,7 +673,7 @@ class MessengerChatServiceApplicationTests {
 		ChatUserDTO validDto = ChatUserDTO.builder()
 				.chatId(chatUser11.getChatId())
 				.userId(chatUser11.getUserId())
-				.title("SuperAdmin")
+				.title("NewTitle")
 				.chatUserRole(chatUser11.getChatUserRole())
 				.build();
 		ChatUserDTO validDto2 = ChatUserDTO.builder()
@@ -506,6 +706,30 @@ class MessengerChatServiceApplicationTests {
 						.param("user-id",validDto.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
+						.param("chat-id",validDto.getChatId().toString())
+						.param("user-id",validDto.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",validDto.getChatId().toString())
+						.param("user-id",validDto.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",validDto.getChatId().toString())
+						.param("user-id",validDto.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto)))
 				.andExpect(status().isOk())
 				.andDo(result -> modified[0] = objectMapper.readValue(
 						result.getResponse().getContentAsString(),ChatUser.class));
@@ -514,6 +738,23 @@ class MessengerChatServiceApplicationTests {
 		chatUser11 = modified[0];
 
 		mockMvc.perform(put("/chat/users")
+						.param("chat-id",validDto2.getChatId().toString())
+						.param("user-id",validDto2.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
+						.param("chat-id",validDto2.getChatId().toString())
+						.param("user-id",validDto2.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden())
+				.andExpect(content().string("user role is modified"));
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.param("chat-id",validDto2.getChatId().toString())
 						.param("user-id",validDto2.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
@@ -527,11 +768,27 @@ class MessengerChatServiceApplicationTests {
 
 		mockMvc.perform(put("/chat/users")
 						.param("chat-id",invalidIdDto.getChatId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidIdDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",invalidIdDto.getChatId().toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(invalidIdDto)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",chatUserDoesNotExistsDto.getChatId().toString())
+						.param("user-id",chatUserDoesNotExistsDto.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(chatUserDoesNotExistsDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.param("chat-id",chatUserDoesNotExistsDto.getChatId().toString())
 						.param("user-id",chatUserDoesNotExistsDto.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
@@ -539,11 +796,43 @@ class MessengerChatServiceApplicationTests {
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
 						.param("chat-id",chatUserDoesNotExistsDto2.getChatId().toString())
 						.param("user-id",chatUserDoesNotExistsDto2.getUserId().toString())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(chatUserDoesNotExistsDto2)))
-				.andExpect(status().isBadRequest());
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",chatUserDoesNotExistsDto2.getChatId().toString())
+						.param("user-id",chatUserDoesNotExistsDto2.getUserId().toString())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(chatUserDoesNotExistsDto2)))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@Order(55)
+	void getAuthTokensAfterModifyingChatUsers() throws Exception {
+		MockHttpServletResponse response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), firstUserTokenOfTypeAdmin)
+						.param(CHAT_NAME.value(), firstChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		String firstChatUserAuthTokenNew = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+		assertNotEquals(firstChatUserAuthToken,firstChatUserAuthTokenNew);
+		firstChatUserAuthToken=firstChatUserAuthTokenNew;
+		//firstChatUserAuthToken is of type SUPER_ADMIN after edit
+
+		response = mockMvc.perform(post("/auth")
+						.param(USER_TOKEN.value(), secondUserTokenOfTypeUser)
+						.param(CHAT_NAME.value(), firstChat.getChatName()))
+				.andExpect(status().isOk())
+				.andReturn().getResponse();
+		String firstChatAdminAuthTokenNew = JwtTokenAuth.PREFIX_WITH_WHITESPACE+response.getHeader(HEADER_ACCESS_TOKEN.value());
+		assertNotEquals(firstChatAdminAuthToken,firstChatAdminAuthTokenNew);
+		firstChatAdminAuthToken=firstChatAdminAuthTokenNew;
 	}
 
 	@Test
@@ -551,11 +840,35 @@ class MessengerChatServiceApplicationTests {
 	void testGetChatInfo() throws Exception {
 
 		mockMvc.perform(get("/chat")
+						.param("chat-id",firstChat.getChatId().toString()))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION, noChatFirstUserToken)
+						.param("chat-id",firstChat.getChatId().toString()))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
 				.param("chat-id",firstChat.getChatId().toString()))
+				.andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(firstChat)));
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",firstChat.getChatId().toString()))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(firstChat)));
 
 		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.param("chat-id",firstChat.getChatId().toString())
+						.param("chat-name","thisWillBeIgnored"))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",firstChat.getChatId().toString())
+						.param("chat-name","thisWillBeIgnored"))
+				.andExpect(status().isOk());
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
 						.param("chat-id",firstChat.getChatId().toString())
 						.param("chat-name","thisWillBeIgnored"))
 				.andExpect(status().isOk())
@@ -564,16 +877,36 @@ class MessengerChatServiceApplicationTests {
 		mockMvc.perform(get("/chat")
 						.param("chat-id","100")
 						.param("chat-name","thisWillBeIgnored"))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id","100")
+						.param("chat-name","thisWillBeIgnored"))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
+						.param("chat-name",secondChat.getChatName()))
+				.andExpect(status().isOk()) //firstChatUserAuthToken is of type SUPER_ADMIN after edit
+				.andExpect(content().json(objectMapper.writeValueAsString(secondChat)));
+
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,noChatFirstUserToken)
+						.param("chat-name",secondChat.getChatName()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
 						.param("chat-name",secondChat.getChatName()))
 				.andExpect(status().isOk())
 				.andExpect(content().json(objectMapper.writeValueAsString(secondChat)));
 
 		mockMvc.perform(get("/chat"))
-				.andExpect(status().isBadRequest())
-				.andExpect(content().string("please specify \"username\" or \"user-id\""));
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(get("/chat").header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken))
+				.andExpect(status().isBadRequest());
 
 	}
 
@@ -613,8 +946,34 @@ class MessengerChatServiceApplicationTests {
 		Chat[] modified = new Chat[1];
 
 		mockMvc.perform(put("/chat")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(validDto1)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,noChatFirstUserToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
+
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
+
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto1)))
 				.andExpect(status().isOk())
 				.andDo(result -> modified[0] = objectMapper.readValue(
 						result.getResponse().getContentAsString(),Chat.class));
@@ -623,11 +982,39 @@ class MessengerChatServiceApplicationTests {
 		firstChat = modified[0];
 
 		mockMvc.perform(put("/chat")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(existingChatNameDto)))
-				.andExpect(status().isBadRequest());
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)//Super Admin
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(existingChatNameDto)))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("Chat name \""+secondChat.getChatName()+"\" already exists"));
 
 		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(existingChatNameDto)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(existingChatNameDto)))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("Chat name \""+secondChat.getChatName()+"\" already exists"));
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken) //Super Admin after edit
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(validDto2)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto2)))
 				.andExpect(status().isOk())
@@ -640,19 +1027,26 @@ class MessengerChatServiceApplicationTests {
 		mockMvc.perform(put("/chat")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(invalidIdChatDto1)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidIdChatDto1)))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(put("/chat")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(invalidIdChatDto2)))
-				.andExpect(status().isBadRequest());
-
+				.andExpect(status().isForbidden())
+				.andExpect(content().string("forbidden: no authorities to modify chat with ID: "+invalidIdChatDto2.getChatId()));
 	}
 
 	@Test
 	@Order(80)
 	void testDeleteChatUser() throws Exception {
-		ChatUserDTO validDto1 = ChatUserDTO.builder()
+		ChatUserDTO chatUser11Dto = ChatUserDTO.builder()
 				.chatId(chatUser11.getChatId())
 				.userId(chatUser11.getUserId())
 				.build();
@@ -663,24 +1057,57 @@ class MessengerChatServiceApplicationTests {
 				.chatId(30L)
 				.userId(349L)
 				.build();
-		ChatUserDTO userThatDoesNotExistDto = validDto1;
+		ChatUserDTO userThatDoesNotExistDto = chatUser11Dto;
 
 		mockMvc.perform(delete("/chat/users")
-						.param("chat-id",validDto1.getChatId().toString())
-						.param("user-id",validDto1.getUserId().toString()))
+						.param("chat-id",chatUser11Dto.getChatId().toString())
+						.param("user-id",chatUser11Dto.getUserId().toString()))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
+						.param("chat-id",chatUser11Dto.getChatId().toString())
+						.param("user-id",chatUser11Dto.getUserId().toString()))
+				.andExpect(status().isForbidden());
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
+						.param("chat-id",chatUser11Dto.getChatId().toString())
+						.param("user-id",chatUser11Dto.getUserId().toString()))
+				.andExpect(status().isForbidden()); //ADMIN cannot delete self
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)//SUPER_ADMIN can delete ADMIN
+						.param("chat-id",chatUser11Dto.getChatId().toString())
+						.param("user-id",chatUser11Dto.getUserId().toString()))
 				.andExpect(status().isOk())
 				.andExpect(content().string("chat user deleted successfully"));
 
 		mockMvc.perform(delete("/chat/users")
+						.param("chat-id",invalidIdDto1.getChatId().toString()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
 						.param("chat-id",invalidIdDto1.getChatId().toString()))
 				.andExpect(status().isBadRequest());
 
 		mockMvc.perform(delete("/chat/users")
 						.param("chat-id",invalidIdDto3.getChatId().toString())
 						.param("user-id",invalidIdDto3.getUserId().toString()))
-				.andExpect(status().isBadRequest());
+				.andExpect(status().isForbidden());
 
 		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",invalidIdDto3.getChatId().toString())
+						.param("user-id",invalidIdDto3.getUserId().toString()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,secondChatSuperAdminAuthToken)
+						.param("chat-id",userThatDoesNotExistDto.getChatId().toString())
+						.param("user-id",userThatDoesNotExistDto.getUserId().toString()))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/chat/users")
+						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)
 						.param("chat-id",userThatDoesNotExistDto.getChatId().toString())
 						.param("user-id",userThatDoesNotExistDto.getUserId().toString()))
 				.andExpect(status().isBadRequest());

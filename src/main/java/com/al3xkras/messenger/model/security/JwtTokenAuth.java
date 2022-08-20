@@ -63,12 +63,14 @@ public class JwtTokenAuth {
         JWTVerifier jwtVerifier = JWT.require(algorithm).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(token);
         String[] subject = decodedJWT.getSubject().split(WHITESPACE,2);
-        String username = subject[0];
-        String chatName = subject[1];
+        String username = subject[1];
+        String chatName = subject[0];
         long messengerUserId = decodedJWT.getClaim(USER_ID.value()).asLong();
+        long chatId = decodedJWT.getClaim(CHAT_ID.value()).asLong();
         ChatUserRole role = decodedJWT.getClaim(ROLES.value()).as(ChatUserRole.class);
         Collection<? extends GrantedAuthority> authorities = role.authorities();
         ChatUserAuthenticationToken authenticationToken = new ChatUserAuthenticationToken(username,messengerUserId,chatName,authorities);
+        authenticationToken.setChatId(chatId);
         authenticationToken.setChatUserRole(role);
         return authenticationToken;
     }

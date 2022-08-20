@@ -43,7 +43,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
         try {
             authToken = JwtTokenAuth.verifyChatUserToken(authHeader.substring(prefix.length()));
         } catch (Exception e){
-            log.warn("invalid auth token",e);
+            log.warn("invalid auth token: "+authHeader.substring(prefix.length()),e);
             response.sendError(HttpStatus.FORBIDDEN.value(),"bad auth token");
             return;
         }
@@ -130,7 +130,12 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
                     response.sendError(HttpStatus.BAD_REQUEST.value(),message);
                     return;
                 }
-                boolean modifyingSelf = (chatId==authToken.getChatId() && userId==authToken.getUserId());
+                if (chatId!=authToken.getChatId()){
+                    log.warn(messageForbidden);
+                    response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    return;
+                }
+                boolean modifyingSelf = userId==authToken.getUserId();
                 if (!((modifyingSelf && authorities.contains(ChatUserAuthority.MODIFY_SELF_INFO)) ||
                         (!modifyingSelf && authorities.contains(ChatUserAuthority.MODIFY_CHAT_USER_INFO_EXCEPT_SELF)))){
                     log.warn(messageForbidden);

@@ -9,6 +9,9 @@ import com.al3xkras.messenger.dto.PageRequestDto;
 import com.al3xkras.messenger.entity.Chat;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
+import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -106,6 +111,10 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Chat name \""+JwtTokenAuth.Param.CHAT_NAME.value()+"\" is" +
                     " not allowed. Please choose another one.");
         }
+        ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        if (!chatDTO.getOwnerId().equals(token.getUserId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"owner id does not match authenticated user");
+        }
         Chat chat = Chat.builder()
                 .chatName(chatDTO.getChatName())
                 .chatDisplayName(chatDTO.getDisplayName())
@@ -132,6 +141,13 @@ public class ChatController {
         @Valid
         ChatDTO validChatDto = chatDTO;
 
+        ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        if ((chatDTO.getChatId()!=null && chatDTO.getChatId()!=token.getChatId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to modify chat with ID: "+chatDTO.getChatId());
+        } else if (chatDTO.getChatId()==null && !chatDTO.getChatName().equals(token.getChatName())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to modify chat with name: \""+chatDTO.getChatName()+"\"");
+        }
+
         if (validChatDto.getChatId()==null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"chat ID is null");
 
@@ -148,6 +164,12 @@ public class ChatController {
     @PostMapping("/chat/users")
     public ChatUser addChatUser(@RequestBody @Valid ChatUserDTO chatUserDTO)
             throws ChatUserAlreadyExistsException {
+
+        ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        if (token.getChatId()!=chatUserDTO.getChatId()){
+            log.warn("forbidden: expected chat ID: "+chatUserDTO.getChatId()+"; actual: "+token.getChatId());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"unable to add chat user: forbidden");
+        }
         MessengerUser user = getMessengerUserById(chatUserDTO.getUserId());
         Chat chat = chatService.findChatById(chatUserDTO.getChatId());
         ChatUser chatUser = ChatUser.builder()
@@ -164,6 +186,11 @@ public class ChatController {
                                    @RequestParam("user-id")Long userId,
                                    @RequestBody ChatUserDTO chatUserDTO)
             throws ChatUserNotFoundException {
+
+        ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        if (!token.getChatUserRole().authorities().contains(ChatUserAuthority.MODIFY_CHAT_USER_TYPE)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"user role is modified");
+        }
         ChatUser chatUser = ChatUser.builder()
                 .chatId(chatId)
                 .userId(userId)
@@ -176,6 +203,11 @@ public class ChatController {
     @DeleteMapping("/chat/users")
     public ResponseEntity<String> deleteChatUser(@RequestParam("chat-id")Long chatId,
                                                  @RequestParam("user-id")Long userId){
+
+        ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        if (token.getChatId()!=chatId){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to delete chat users from chat with ID: "+chatId);
+        }
         ChatUser chatUser = ChatUser.builder()
                 .chatId(chatId)
                 .userId(userId)
