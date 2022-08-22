@@ -1,12 +1,10 @@
 package com.al3xkras.messenger.message_service.service;
 
 import com.al3xkras.messenger.entity.ChatMessage;
-import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.message_service.exception.ChatMessageAlreadyExistsException;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
 import com.al3xkras.messenger.model.ChatMessageId;
 import com.al3xkras.messenger.message_service.repository.ChatMessageRepository;
-import com.al3xkras.messenger.model.ChatUserId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -33,11 +31,11 @@ public class MessageService {
     }
 
     public Page<ChatMessage> findAllMessagesByChatId(Long chatId, Pageable pageable) {
-        return chatMessageRepository.findAllByChatId(chatId,pageable);
+        return chatMessageRepository.findAllByChatIdOrderBySubmissionDate(chatId,pageable);
     }
 
     public Page<ChatMessage> findAllMessagesByChatName(String chatName, Pageable pageable) {
-        return chatMessageRepository.findAllByChatName(chatName,pageable);
+        return chatMessageRepository.findAllByChatNameOrderBySubmissionDate(chatName,pageable);
     }
 
     @Transactional

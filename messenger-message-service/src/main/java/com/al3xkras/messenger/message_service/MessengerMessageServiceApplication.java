@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.message_service;
 
+import com.al3xkras.messenger.message_service.model.JwtAccessTokens;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -22,11 +23,17 @@ public class MessengerMessageServiceApplication {
 	public RestTemplate restTemplate(){
 		return new RestTemplate();
 	}
+
 	@Bean
 	public ObjectMapper objectMapper(){
 		return new ObjectMapper()
 				.registerModule(new ParameterNamesModule())
 				.registerModule(new Jdk8Module())
 				.registerModule(new JavaTimeModule());
+	}
+
+	@Bean
+	public JwtAccessTokens accessTokens(){
+		return new JwtAccessTokens();
 	}
 }

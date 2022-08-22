@@ -1,12 +1,16 @@
 package com.al3xkras.messenger.model;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class ChatMessageId implements Serializable {
+    @NotNull
     private Long chatId;
+    @NotNull
     private Long userId;
+    @NotNull
     private LocalDateTime submissionDate;
 
     public ChatMessageId(){

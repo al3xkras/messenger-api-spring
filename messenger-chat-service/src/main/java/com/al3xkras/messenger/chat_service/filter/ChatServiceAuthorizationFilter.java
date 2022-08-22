@@ -32,7 +32,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String prefix = "Bearer ";
+        String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader==null){
             response.sendError(HttpStatus.FORBIDDEN.value());
