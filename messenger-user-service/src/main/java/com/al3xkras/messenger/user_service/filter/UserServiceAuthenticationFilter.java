@@ -1,6 +1,6 @@
 package com.al3xkras.messenger.user_service.filter;
 
-import com.al3xkras.messenger.model.MessengerResponse;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.user_service.model.MessengerUserDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -37,7 +37,7 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
         String password = request.getParameter(PASSWORD.value());
 
         if (username==null || password==null || username.isEmpty() || password.isEmpty())
-            throw new BadCredentialsException(MessengerResponse.Messages.EXCEPTION_AUTHORIZE.value());
+            throw new BadCredentialsException(MessengerUtils.Messages.EXCEPTION_AUTHORIZE.value());
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,password);
 

@@ -1,6 +1,5 @@
 package com.al3xkras.messenger.user_service.filter;
 
-import com.al3xkras.messenger.model.MessengerResponse;
 import com.al3xkras.messenger.model.authorities.MessengerUserAuthority;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.al3xkras.messenger.model.security.MessengerUserAuthenticationToken;
@@ -20,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
 
-import static com.al3xkras.messenger.model.MessengerResponse.Messages.*;
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USERNAME;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USER_ID;
 
@@ -31,8 +30,8 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         if (requestURI.equals("/user/login") ||
                 (request.getMethod().equalsIgnoreCase("post") && requestURI.equals("/user"))){
-            log.info("authorization filter ignored for url: "+requestURI+" method:"+request.getMethod());
-            filterChain.doFilter(request, response);
+            log.warn(String.format(WARNING_FILTER_IGNORED_FOR_REQUEST.value(),
+                    UserServiceAuthorizationFilter.class.getCanonicalName(),request.getRequestURI()));filterChain.doFilter(request, response);
             return;
         }
 
@@ -147,7 +146,8 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         } else if (usernameParam!=null){
             return usernameParam.equals(authResult.getUsername());
         } else {
-            response.sendError(HttpStatus.BAD_REQUEST.value(), EXCEPTION_REQUEST_USER_ID_AND_USERNAME_IS_EMPTY.value());
+            response.sendError(HttpStatus.BAD_REQUEST.value(), String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                    String.join(",", USERNAME.value(), USER_ID.value())));
             return null;
         }
     }

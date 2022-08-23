@@ -2,8 +2,9 @@ package com.al3xkras.messenger.user_service.controller;
 
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.model.MessengerResponse;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
@@ -18,6 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.HashSet;
+
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
 @RestController
@@ -36,7 +40,7 @@ public class MessengerUserController {
     @ExceptionHandler(MessengerUserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleMessengerUserNotFoundException() {
-        return MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value();
+        return EXCEPTION_MESSENGER_USER_NOT_FOUND.value();
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -47,7 +51,7 @@ public class MessengerUserController {
     @ExceptionHandler(MessengerUserAlreadyExistsException.class)
     public ResponseEntity<String> handleMessengerUserAlreadyExistsException(MessengerUserAlreadyExistsException e){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                String.format(MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_USERNAME_EXISTS.value(),
+                String.format(EXCEPTION_MESSENGER_USER_USERNAME_EXISTS.value(),
                         e.getUsername()==null?"":e.getUsername()));
     }
 
@@ -67,7 +71,7 @@ public class MessengerUserController {
     public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
         if (!activeProfiles.contains("no-security") && !messengerUserDto.getMessengerUserType().equals(MessengerUserType.USER))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_PERSIST_INVALID_USER_TYPE.value());
+                    EXCEPTION_MESSENGER_USER_PERSIST_INVALID_USER_TYPE.value());
 
         MessengerUser messengerUser = MessengerUser.builder()
                 .username(messengerUserDto.getUsername())
@@ -103,7 +107,8 @@ public class MessengerUserController {
             return messengerUserService.updateUserByUsername(messengerUser);
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                MessengerResponse.Messages.EXCEPTION_REQUEST_USER_ID_AND_USERNAME_IS_EMPTY.value());
+                String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ", USERNAME.value(), USER_ID.value())));
     }
 
     @DeleteMapping
@@ -112,15 +117,17 @@ public class MessengerUserController {
                             throws MessengerUserNotFoundException{
         if (messengerUserId!=null){
             if (!activeProfiles.contains("no-security") && messengerUserService.getUserTypeById(messengerUserId).equals(MessengerUserType.ADMIN))
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_DELETE_INVALID_USER_TYPE.value());
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, EXCEPTION_MESSENGER_USER_DELETE_INVALID_USER_TYPE.value());
             messengerUserService.deleteById(messengerUserId);
             return ResponseEntity.status(HttpStatus.OK).build();
         } else if (username!=null){
             if (!activeProfiles.contains("no-security") && messengerUserService.getUserTypeByUsername(username).equals(MessengerUserType.ADMIN))
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_DELETE_INVALID_USER_TYPE.value());
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, EXCEPTION_MESSENGER_USER_DELETE_INVALID_USER_TYPE.value());
             messengerUserService.deleteByUsername(username);
             return ResponseEntity.status(HttpStatus.OK).build();
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,MessengerResponse.Messages.EXCEPTION_REQUEST_USER_ID_AND_USERNAME_IS_EMPTY.value());
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ", USERNAME.value(), USER_ID.value())));
     }
 }

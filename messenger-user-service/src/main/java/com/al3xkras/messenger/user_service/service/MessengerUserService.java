@@ -19,7 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 
-import static com.al3xkras.messenger.model.MessengerResponse.Messages.*;
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
