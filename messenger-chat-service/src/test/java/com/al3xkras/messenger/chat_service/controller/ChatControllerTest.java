@@ -9,8 +9,11 @@ import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.chat_service.service.ChatService;
+import com.al3xkras.messenger.model.MessengerUtils;
+import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -26,7 +29,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
@@ -34,6 +40,8 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Optional;
 
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.EXCEPTION_ARGUMENT_ISNULL;
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,8 +60,18 @@ class ChatControllerTest {
     private RestTemplate restTemplate;
     @MockBean
     private JwtAccessTokens accessTokens;
+    @MockBean
+    private SecurityContext securityContext;
 
     static ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp(){
+        ChatUserAuthenticationToken authenticationToken = new ChatUserAuthenticationToken("user1",1L,"name",
+                ChatUserRole.SUPER_ADMIN.authorities());
+        authenticationToken.setChatId(1L);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
 
     @Test
     void testGetChatsByUser() throws Exception {
@@ -88,7 +106,8 @@ class ChatControllerTest {
         mockMvc.perform(get("/chats").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(pageRequestDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("please specify \"username\" or \"user-id\""));
+                .andExpect(content().string(String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ",JwtTokenAuth.Param.USER_ID.value(),JwtTokenAuth.Param.USERNAME.value()))));
 
         mockMvc.perform(get("/chats"))
                 .andExpect(status().isBadRequest());
@@ -112,7 +131,8 @@ class ChatControllerTest {
                 .build();
 
         String accessToken = "someToken ______";
-        URI uri = URI.create("http://localhost:10001/user/"+1L);
+        String userServicePrefix = MessengerUtils.Property.USER_SERVICE_URI_PREFIX.value();
+        URI uri = URI.create("http://localhost:10001"+userServicePrefix+"/user/"+1L);
         RequestEntity<?> requestEntity = RequestEntity.get(uri)
                 .header(HttpHeaders.AUTHORIZATION, JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)
                 .build();
@@ -161,7 +181,8 @@ class ChatControllerTest {
 
         mockMvc.perform(get("/chat"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("please specify \"username\" or \"user-id\""));
+                .andExpect(content().string(String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ",JwtTokenAuth.Param.USER_ID.value(),JwtTokenAuth.Param.USERNAME.value()))));
     }
 
     @Test
@@ -181,7 +202,7 @@ class ChatControllerTest {
         mockMvc.perform(put("/chat").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(chatDTOInvalid)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("chat ID is null"));
+                .andExpect(content().string(String.format(EXCEPTION_ARGUMENT_ISNULL.value(),JwtTokenAuth.Param.CHAT_ID.value(),ChatDTO.class.getSimpleName())));
 
         Chat chat = Chat.builder()
                 .chatId(chatDTO.getChatId())
@@ -222,6 +243,9 @@ class ChatControllerTest {
 
         Mockito.when(chatService.updateChatUser(chatUserModified))
                 .thenReturn(chatUserModified);
+
+        ChatUserAuthenticationToken authenticationToken = new ChatUserAuthenticationToken("user1",1L,"name",ChatUserRole.SUPER_ADMIN.authorities());
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         mockMvc.perform(put("/chat/users")
                         .param("chat-id",chatUserDTO.getChatId().toString())

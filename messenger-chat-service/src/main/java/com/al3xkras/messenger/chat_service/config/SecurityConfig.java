@@ -4,6 +4,7 @@ import com.al3xkras.messenger.chat_service.filter.ChatServiceAuthenticationFilte
 import com.al3xkras.messenger.chat_service.filter.ChatServiceAuthorizationFilter;
 import com.al3xkras.messenger.chat_service.model.ChatUserAuthenticationManager;
 import com.al3xkras.messenger.chat_service.service.ChatService;
+import com.al3xkras.messenger.model.MessengerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -46,12 +47,11 @@ public class SecurityConfig {
 
         if (activeProfiles.contains("no-security")){
             http.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
-            log.warn("spring security is disabled!");
+            log.warn(MessengerUtils.Messages.WARNING_SECURITY_DISABLED.value());
             return http.build();
         }
 
-        ChatServiceAuthenticationFilter chatServiceAuthenticationFilter =
-                new ChatServiceAuthenticationFilter("/auth",chatService);
+        ChatServiceAuthenticationFilter chatServiceAuthenticationFilter = new ChatServiceAuthenticationFilter("/auth",chatService);
         ChatServiceAuthorizationFilter chatServiceAuthorizationFilter = new ChatServiceAuthorizationFilter();
 
         http.csrf().disable()

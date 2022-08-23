@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
 
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
-public class JwtTokenAuth {
+public final class JwtTokenAuth {
 
     public static final long DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS;
     public static final long DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS;

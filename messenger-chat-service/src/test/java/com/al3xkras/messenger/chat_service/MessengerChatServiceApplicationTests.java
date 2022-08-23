@@ -10,6 +10,7 @@ import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.RestResponsePage;
 import com.al3xkras.messenger.chat_service.service.ChatService;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
@@ -28,6 +29,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.annotation.Commit;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
@@ -50,6 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ActiveProfiles({"default","test-disablePasswordEncoder"})
 class MessengerChatServiceApplicationTests {
 
 	@Autowired
@@ -751,7 +754,7 @@ class MessengerChatServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(validDto2)))
 				.andExpect(status().isForbidden())
-				.andExpect(content().string("user role is modified"));
+				.andExpect(content().string(MessengerUtils.Messages.EXCEPTION_CHAT_USER_ROLE_MODIFIED.value()));
 
 		mockMvc.perform(put("/chat/users")
 						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
@@ -986,7 +989,7 @@ class MessengerChatServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(existingChatNameDto)))
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string("Chat name \""+secondChat.getChatName()+"\" already exists"));
+				.andExpect(content().string(secondChat.getChatName()));
 
 		mockMvc.perform(put("/chat")
 						.header(HttpHeaders.AUTHORIZATION,secondChatAdminAuthToken)
@@ -999,7 +1002,7 @@ class MessengerChatServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(existingChatNameDto)))
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string("Chat name \""+secondChat.getChatName()+"\" already exists"));
+				.andExpect(content().string(secondChat.getChatName()));
 
 		mockMvc.perform(put("/chat")
 						.header(HttpHeaders.AUTHORIZATION,firstChatAdminAuthToken)
@@ -1040,7 +1043,7 @@ class MessengerChatServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(invalidIdChatDto2)))
 				.andExpect(status().isForbidden())
-				.andExpect(content().string("forbidden: no authorities to modify chat with ID: "+invalidIdChatDto2.getChatId()));
+				.andExpect(content().string(String.format(MessengerUtils.Messages.EXCEPTION_CHAT_MODIFICATION_FORBIDDEN.value(),CHAT_ID.value()+": "+invalidIdChatDto2.getChatId())));
 	}
 
 	@Test
@@ -1077,8 +1080,7 @@ class MessengerChatServiceApplicationTests {
 						.header(HttpHeaders.AUTHORIZATION,firstChatUserAuthToken)//SUPER_ADMIN can delete ADMIN
 						.param("chat-id",chatUser11Dto.getChatId().toString())
 						.param("user-id",chatUser11Dto.getUserId().toString()))
-				.andExpect(status().isOk())
-				.andExpect(content().string("chat user deleted successfully"));
+				.andExpect(status().isOk());
 
 		mockMvc.perform(delete("/chat/users")
 						.param("chat-id",invalidIdDto1.getChatId().toString()))

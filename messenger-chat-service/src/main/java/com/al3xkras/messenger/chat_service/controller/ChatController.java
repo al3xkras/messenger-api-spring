@@ -9,7 +9,7 @@ import com.al3xkras.messenger.dto.PageRequestDto;
 import com.al3xkras.messenger.entity.Chat;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
 import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
@@ -22,7 +22,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +32,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.net.URI;
+
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
 
 @Slf4j
 @RestController
@@ -75,7 +76,8 @@ public class ChatController {
         } else if (username!=null){
            return chatService.findAllByMessengerUserUsername(username, pageable);
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                String.join(", ",JwtTokenAuth.Param.USER_ID.value(),JwtTokenAuth.Param.USERNAME.value())));
     }
 
     private MessengerUser getMessengerUserById(Long id) throws ResponseStatusException{
@@ -83,11 +85,13 @@ public class ChatController {
         try {
             accessToken = accessTokens.getUserServiceAccessToken();
         } catch (Exception e){
-            log.warn("user service auth failed",e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"unable to access user service");
+            log.warn(EXCEPTION_AUTHORIZE.value(),e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,EXCEPTION_USER_SERVICE_UNREACHABLE.value());
         }
 
-        URI uri = URI.create("http://localhost:10001/user/"+id);
+        //TODO remove hardcoded URI
+        String userServicePrefix = MessengerUtils.Property.USER_SERVICE_URI_PREFIX.value();
+        URI uri = URI.create("http://localhost:10001"+userServicePrefix+"/user/"+id);
         RequestEntity<?> requestEntity = RequestEntity.get(uri)
                 .header(HttpHeaders.AUTHORIZATION,JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)
                 .build();
@@ -97,10 +101,10 @@ public class ChatController {
         } catch (HttpClientErrorException e){
             throw new ResponseStatusException(e.getStatusCode(),e.getMessage());
         } catch (ResourceAccessException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"unable to access user service");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,EXCEPTION_USER_SERVICE_UNREACHABLE.value());
         }
         if (user==null)
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"user service error");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,EXCEPTION_USER_SERVICE_INTERNAL_ERROR.value());
         return user;
     }
 
@@ -108,12 +112,12 @@ public class ChatController {
     public Chat createChat(@RequestBody @Valid ChatDTO chatDTO)
             throws ChatNameAlreadyExistsException,InvalidMessengerUserException{
         if (chatDTO.getChatName().equals(JwtTokenAuth.Param.CHAT_NAME.value())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Chat name \""+JwtTokenAuth.Param.CHAT_NAME.value()+"\" is" +
-                    " not allowed. Please choose another one.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(EXCEPTION_CHAT_NAME_IS_INVALID.value(),JwtTokenAuth.Param.CHAT_NAME.value()));
         }
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        if (!chatDTO.getOwnerId().equals(token.getUserId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"owner id does not match authenticated user");
+        if (chatDTO.getOwnerId()==null || !chatDTO.getOwnerId().equals(token.getUserId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, EXCEPTION_CHAT_OWNER_ID_IS_INVALID.value());
         }
         Chat chat = Chat.builder()
                 .chatName(chatDTO.getChatName())
@@ -132,24 +136,28 @@ public class ChatController {
         } else if (chatName!=null){
             return chatService.findChatByChatName(chatName);
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"username\" or \"user-id\"");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                String.join(", ",JwtTokenAuth.Param.USER_ID.value(),JwtTokenAuth.Param.USERNAME.value())));
     }
 
     @PutMapping("/chat")
     public Chat editChatInfo(@RequestBody ChatDTO chatDTO){
-        chatDTO.setOwnerId(0L); //owner id is IGNORED, but the field is required for validation
+        chatDTO.setOwnerId(0L); //owner id is IGNORED, but the field is required for the validation
         @Valid
         ChatDTO validChatDto = chatDTO;
 
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        if ((chatDTO.getChatId()!=null && chatDTO.getChatId()!=token.getChatId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to modify chat with ID: "+chatDTO.getChatId());
-        } else if (chatDTO.getChatId()==null && !chatDTO.getChatName().equals(token.getChatName())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to modify chat with name: \""+chatDTO.getChatName()+"\"");
+        if ((validChatDto.getChatId()!=null && validChatDto.getChatId()!=token.getChatId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,String.format(EXCEPTION_CHAT_MODIFICATION_FORBIDDEN.value(),
+                    JwtTokenAuth.Param.CHAT_ID.value()+": "+validChatDto.getChatId()));
+        } else if (validChatDto.getChatId()==null && !validChatDto.getChatName().equals(token.getChatName())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,String.format(EXCEPTION_CHAT_MODIFICATION_FORBIDDEN.value(),
+                    JwtTokenAuth.Param.CHAT_NAME.value()+": "+validChatDto.getChatName()));
         }
 
         if (validChatDto.getChatId()==null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"chat ID is null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(EXCEPTION_ARGUMENT_ISNULL.value(),JwtTokenAuth.Param.CHAT_ID.value(),ChatDTO.class.getSimpleName()));
 
         Chat chat = Chat.builder()
                 .chatId(validChatDto.getChatId())
@@ -168,7 +176,8 @@ public class ChatController {
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         if (token.getChatId()!=chatUserDTO.getChatId()){
             log.warn("forbidden: expected chat ID: "+chatUserDTO.getChatId()+"; actual: "+token.getChatId());
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"unable to add chat user: forbidden");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format(
+                    EXCEPTION_CHAT_ADD_USER_IS_FORBIDDEN.value(),chatUserDTO.getTitle(),token.getChatName()));
         }
         MessengerUser user = getMessengerUserById(chatUserDTO.getUserId());
         Chat chat = chatService.findChatById(chatUserDTO.getChatId());
@@ -188,8 +197,9 @@ public class ChatController {
             throws ChatUserNotFoundException {
 
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        if (!token.getChatUserRole().authorities().contains(ChatUserAuthority.MODIFY_CHAT_USER_TYPE)){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"user role is modified");
+
+        if (!token.getAuthorities().contains(ChatUserAuthority.MODIFY_CHAT_USER_TYPE)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,EXCEPTION_CHAT_USER_ROLE_MODIFIED.value());
         }
         ChatUser chatUser = ChatUser.builder()
                 .chatId(chatId)
@@ -206,7 +216,8 @@ public class ChatController {
 
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         if (token.getChatId()!=chatId){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"forbidden: no authorities to delete chat users from chat with ID: "+chatId);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format(
+                    EXCEPTION_CHAT_ADD_USER_IS_FORBIDDEN.value(),token.getChatName()));
         }
         ChatUser chatUser = ChatUser.builder()
                 .chatId(chatId)
@@ -214,9 +225,9 @@ public class ChatController {
                 .build();
         try {
             chatService.deleteChatUser(chatUser);
-            return ResponseEntity.status(HttpStatus.OK).body("chat user deleted successfully");
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (ChatUserNotFoundException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("chat user not found. failed to delete");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EXCEPTION_CHAT_USER_NOT_FOUND.value());
         }
     }
 
@@ -231,7 +242,8 @@ public class ChatController {
         } else if (chatName!=null){
             return chatService.findAllChatUsersByChatName(chatName,pageable);
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"please specify \"chat-id\" or \"chat-name\"");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                String.join(", ",JwtTokenAuth.Param.USER_ID.value(),JwtTokenAuth.Param.USERNAME.value())));
     }
 
 }

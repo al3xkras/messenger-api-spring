@@ -8,6 +8,7 @@ import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.ChatUserId;
 import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.MessengerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.TransientPropertyValueException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ import javax.validation.constraints.NotNull;
 @Service
 public class ChatService {
 
-    public static final String DEFAULT_TITLE_ADMIN = "Admin";
+    public static final String DEFAULT_TITLE_ADMIN = MessengerUtils.Property.CHAT_ADMIN_DEFAULT_TITLE.value();
 
     private final ChatRepository chatRepository;
     private final ChatUserRepository chatUserRepository;
@@ -50,7 +51,7 @@ public class ChatService {
     @Transactional
     public Chat saveChat(Chat chat, MessengerUser creator) throws ChatNameAlreadyExistsException, InvalidMessengerUserException {
         if (creator.getMessengerUserId()==null)
-            throw new InvalidMessengerUserException("chat creator has null ID");
+            throw new InvalidMessengerUserException(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value());
         ChatUser chatOwner = ChatUser.builder()
                 .chat(chat)
                 .messengerUser(creator)
@@ -65,7 +66,7 @@ public class ChatService {
             throw new ChatNameAlreadyExistsException(chat.getChatName());
         } catch (InvalidDataAccessApiUsageException | JpaObjectRetrievalFailureException e){
             if (e.getCause() instanceof EntityNotFoundException || e.getCause().getCause() instanceof TransientPropertyValueException){
-                throw new InvalidMessengerUserException("messenger user with id "+creator.getMessengerUserId()+" not found");
+                throw new InvalidMessengerUserException(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value());
             } else {
                 throw e;
             }

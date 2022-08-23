@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 @Slf4j
@@ -53,7 +54,8 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
         if (!request.getRequestURI().equals(filterProcessesUrl)){
-            log.warn("authentication filter ignored for request: "+request.getRequestURI());
+            log.warn(String.format(WARNING_FILTER_IGNORED_FOR_REQUEST.value(),
+                    ChatServiceAuthenticationFilter.class.getCanonicalName(),request.getRequestURI()));
             filterChain.doFilter(req,res);
             return;
         }
@@ -74,10 +76,11 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         if (!isAnonymousChatUserAuth){
             try {
                 chatId=chatService.getChatIdByChatName(authToken.getChatName());
-                log.info("Chat id: "+chatId);
             }catch (ChatNotFoundException e){
-                log.warn("chat not found: \""+authToken.getChatName()+'"');
-                unsuccessfulAuthentication(request, response, new ChatServiceAuthenticationException("chat not found: \""+authToken.getChatName()+'"'));
+                String message = String.format(EXCEPTION_CHAT_NOT_FOUND.value(),authToken.getChatName());
+                log.warn(message);
+                unsuccessfulAuthentication(request, response, new ChatServiceAuthenticationException(
+                        message));
                 return;
             }
             try {
@@ -87,12 +90,13 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
                 log.warn("chat user not found:" +
                         " chat: "+authToken.getChatName()+
                         " user: "+authToken.getUsername());
-                response.sendError(HttpStatus.FORBIDDEN.value(),"chat user not found");
+                response.sendError(HttpStatus.FORBIDDEN.value(), EXCEPTION_CHAT_USER_NOT_FOUND.value());
                 return;
             }
         }
 
-        ChatUserAuthenticationToken authResult = new ChatUserAuthenticationToken(authToken.getUsername(),authToken.getUserId(),authToken.getChatName(),Collections.emptyList());
+        ChatUserAuthenticationToken authResult = new ChatUserAuthenticationToken(
+                authToken.getUsername(),authToken.getUserId(),authToken.getChatName(),Collections.emptyList());
         if (!isAnonymousChatUserAuth)
             authResult.setChatId(chatId);
         if (!isAnonymousChatUserAuth && authToken.getChatUserRole()==null){
@@ -110,8 +114,9 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         String chatName = request.getParameter(CHAT_NAME.value());
 
         if (userAuth==null || userAuth.isEmpty()) {
-            log.warn("user auth token is null");
-            throw new BadCredentialsException("invalid credentials");
+            String message = String.format(EXCEPTION_AUTH_TOKEN_IS_NULL.value(),USER_TOKEN.value());
+            log.warn(message);
+            throw new BadCredentialsException(message);
         }
         if (chatName==null || chatName.isEmpty()){
             chatName = CHAT_NAME.value();
@@ -119,8 +124,9 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
 
         String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
         if (!userAuth.startsWith(prefix)) {
-            log.warn("invalid token");
-            throw new BadCredentialsException("invalid user auth token");
+            String message = String.format(EXCEPTION_AUTH_TOKEN_IS_INVALID.value(),USER_TOKEN.value());
+            log.warn(message);
+            throw new BadCredentialsException(message);
         }
 
         MessengerUserAuthenticationToken userAuthToken;
@@ -128,8 +134,9 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
             String token = userAuth.substring(prefix.length());
             userAuthToken = JwtTokenAuth.verifyMessengerUserToken(token);
         } catch (Exception e){
-            log.warn("invalid user auth token");
-            throw new BadCredentialsException("invalid user auth token");
+            String message = String.format(EXCEPTION_AUTH_TOKEN_IS_INVALID.value(),USER_TOKEN.value());
+            log.warn(message);
+            throw new BadCredentialsException(message);
         }
 
         ChatUserAuthenticationToken chatUserAuthenticationToken =
