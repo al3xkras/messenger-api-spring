@@ -15,14 +15,19 @@ import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
 
 public class JwtTokenAuth {
 
-    public static final long DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS = 1000L*60*60;
-    public static final long DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS = 1000L*60*60*24*30;
+    public static final long DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS;
+    public static final long DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS;
 
     private static final ResourceBundle authBundle = ResourceBundle.getBundle("messenger-auth");
     private static final String jwtAuthSecret = authBundle.getString("jwt.secret");
 
     private static final String WHITESPACE = " ";
     public static final String PREFIX_WITH_WHITESPACE =  authBundle.getString("token.prefix")+WHITESPACE;
+
+    static {
+        DEFAULT_TOKEN_EXPIRATION_TIME_MILLIS = Long.parseLong(authBundle.getString("token.default-expiration-time-millis"));
+        DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS = Long.parseLong(authBundle.getString("refresh-token.default-expiration-time-millis"));
+    }
 
     public enum Param {
         //User Service Auth parameters

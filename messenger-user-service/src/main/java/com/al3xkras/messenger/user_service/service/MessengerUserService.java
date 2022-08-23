@@ -19,6 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 
+import static com.al3xkras.messenger.model.MessengerResponse.Messages.*;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+
 @Slf4j
 @Service
 public class MessengerUserService {
@@ -52,7 +55,7 @@ public class MessengerUserService {
     @Transactional
     public MessengerUser updateUserById(MessengerUser messengerUser) throws MessengerUserNotFoundException, MessengerUserAlreadyExistsException{
         if (messengerUser.getMessengerUserId()==null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"user ID is null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(EXCEPTION_ARGUMENT_ISNULL.value(), USER_ID.value()));
         MessengerUser beforeUpdate = messengerUserRepository.findById(messengerUser.getMessengerUserId())
                 .orElseThrow(MessengerUserNotFoundException::new);
         MessengerUser updated = MessengerUser.builder()
@@ -75,7 +78,7 @@ public class MessengerUserService {
     @Transactional
     public MessengerUser updateUserByUsername(MessengerUser messengerUser) throws MessengerUserNotFoundException {
         if (messengerUser.getUsername()==null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"username is null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(EXCEPTION_ARGUMENT_ISNULL.value(), USERNAME.value()));
         MessengerUser beforeUpdate = messengerUserRepository.findByUsername(messengerUser.getUsername())
                 .orElseThrow(MessengerUserNotFoundException::new);
         MessengerUser updated = MessengerUser.builder()

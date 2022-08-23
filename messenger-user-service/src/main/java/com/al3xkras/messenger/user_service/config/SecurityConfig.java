@@ -1,5 +1,6 @@
 package com.al3xkras.messenger.user_service.config;
 
+import com.al3xkras.messenger.model.MessengerResponse;
 import com.al3xkras.messenger.user_service.filter.UserServiceAuthenticationFilter;
 import com.al3xkras.messenger.user_service.filter.UserServiceAuthorizationFilter;
 import com.al3xkras.messenger.user_service.service.MessengerUserDetailsService;
@@ -45,7 +46,7 @@ public class SecurityConfig {
         Set<String> profiles = new HashSet<>(Arrays.asList(env.getActiveProfiles()));
         if (profiles.contains("no-security")){
             http.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
-            log.warn("spring security is disabled!");
+            log.warn(MessengerResponse.Messages.WARNING_SECURITY_DISABLED.value());
             return http.build();
         }
 

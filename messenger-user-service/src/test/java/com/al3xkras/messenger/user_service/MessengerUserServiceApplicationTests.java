@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.user_service;
 
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerResponse;
 import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -453,7 +454,7 @@ class MessengerUserServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(usernameExistsWhenModifyByUserIdDto)))
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string("messenger user with specified username already exists"));
+				.andExpect(content().string(String.format(MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_USERNAME_EXISTS.value(),usernameExistsWhenModifyByUserIdDto.getUsername())));
 
 		mockMvc.perform(put("/user")
 						.param("user-id",firstUser.getMessengerUserId().toString())
@@ -544,8 +545,7 @@ class MessengerUserServiceApplicationTests {
 		mockMvc.perform(delete("/user")
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
 						.param("username",secondUser.getUsername()))
-				.andExpect(status().isOk())
-				.andExpect(content().string("deleted user with username : \""+secondUser.getUsername()+'\"'));
+				.andExpect(status().isOk());
 
 		mockMvc.perform(delete("/user")
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
