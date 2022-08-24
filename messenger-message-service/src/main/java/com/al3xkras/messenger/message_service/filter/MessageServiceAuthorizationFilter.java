@@ -1,13 +1,10 @@
 package com.al3xkras.messenger.message_service.filter;
 
-import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
 import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,9 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collection;
 
-import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+import static com.al3xkras.messenger.model.MessengerUtils.*;
 
 @Slf4j
 public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {
@@ -28,7 +24,7 @@ public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {
 
         if (uri.equals("/auth") || uri.equals("/error")){
             filterChain.doFilter(request,response);
-            log.info("authorization filter ignored for URI: "+uri);
+            log.info(Messages.WARNING_FILTER_IGNORED_FOR_REQUEST.value(),MessageServiceAuthorizationFilter.class.getSimpleName(),request.getRequestURI());
             return;
         }
 
@@ -43,8 +39,9 @@ public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {
         try {
             authToken = JwtTokenAuth.verifyChatUserToken(authHeader.substring(prefix.length()));
         } catch (Exception e){
-            log.warn("invalid auth token: "+authHeader.substring(prefix.length()),e);
-            response.sendError(HttpStatus.FORBIDDEN.value(),"bad auth token");
+            String message = String.format(Messages.EXCEPTION_AUTH_TOKEN_IS_INVALID.value(), Property.USER_SERVICE_NAME.value());
+            log.warn(message+": "+authHeader.substring(prefix.length()),e);
+            response.sendError(HttpStatus.FORBIDDEN.value(), message);
             return;
         }
 

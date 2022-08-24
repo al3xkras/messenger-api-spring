@@ -30,7 +30,12 @@ public final class MessengerUtils {
         EXCEPTION_AUTH_TOKEN_IS_NULL(messages.getString("exception.auth-token.is-null")),
         EXCEPTION_AUTH_TOKEN_IS_INVALID(messages.getString("exception.auth-token.is-invalid")),
         EXCEPTION_ID_IS_INVALID(messages.getString("exception.id.is-invalid")),
-        EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL(messages.getString("request.required-parameters.are-null"));
+        EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL(messages.getString("request.required-parameters.are-null")),
+        EXCEPTION_MESSAGE_SERVICE_READ_FORBIDDEN(messages.getString("exception.message-service.messages.read-forbidden")),
+        EXCEPTION_MESSAGE_SERVICE_SEND_FORBIDDEN(messages.getString("exception.message-service.messages.send-forbidden")),
+        EXCEPTION_MESSAGE_SERVICE_MESSAGE_MODIFICATION_FORBIDDEN(messages.getString("exception.message-service.message.modification-forbidden")),
+        EXCEPTION_MESSAGE_SERVICE_MESSAGE_DELETE_FORBIDDEN(messages.getString("exception.message-service.message.delete-forbidden")),
+        WARN_TOKEN_ACCESS(messages.getString("warn.token.access"));
         private final String value;
         public String value() {
             return value;

@@ -52,13 +52,8 @@ class MessengerMessageServiceApplicationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    static MessengerUser firstUser = MessengerUser.builder()
-            .username("user1")
-            .name("Max")
-            .emailAddress("max@gmail.com")
-            .phoneNumber("+43 111-22-33")
-            .messengerUserType(MessengerUserType.ADMIN)
-            .build();
+    static MessengerUser firstUser = MessengerUser.FIRST_ADMIN;
+
     static MessengerUser secondUser = MessengerUser.builder()
             .username("user2")
             .name("Andrew")

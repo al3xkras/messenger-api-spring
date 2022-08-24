@@ -2,6 +2,7 @@ package com.al3xkras.messenger.message_service.model;
 
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.ChatUserRole;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -64,7 +65,7 @@ public class JwtAccessTokens {
         String accessToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
         String refreshToken = responseEntity.getHeaders().getFirst(HEADER_REFRESH_TOKEN.value());
         if (accessToken==null || refreshToken==null)
-            throw new IllegalStateException("user service access or refresh token is null");
+            throw new IllegalStateException(String.format(MessengerUtils.Messages.EXCEPTION_AUTH_TOKEN_IS_NULL.value(),MessengerUtils.Property.USER_SERVICE_NAME.value()));
         userServiceAccessToken = accessToken;
         userServiceRefreshToken = refreshToken;
         return userServiceAccessToken;
@@ -91,7 +92,8 @@ public class JwtAccessTokens {
         String userAccessToken = getUserServiceAccessToken();
         String requestUri;
         if (chatName==null){
-            log.info("Chat name argument is null. Result token access is "+ChatUserRole.ANONYMOUS);
+            log.info(String.format(MessengerUtils.Messages.EXCEPTION_ARGUMENT_ISNULL.value(),CHAT_NAME.value())+" "+
+                    String.format(MessengerUtils.Messages.WARN_TOKEN_ACCESS.value(),ChatUserRole.ANONYMOUS.name()));
             requestUri = UriComponentsBuilder.fromUriString(uri)
                     .queryParam(USER_TOKEN.value(), userAccessToken)
                     .toUriString();
@@ -109,7 +111,7 @@ public class JwtAccessTokens {
         String accessToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
         String refreshToken = responseEntity.getHeaders().getFirst(HEADER_REFRESH_TOKEN.value());
         if (accessToken==null || refreshToken==null)
-            throw new IllegalStateException("chat service access or refresh token is null");
+            throw new IllegalStateException(String.format(MessengerUtils.Messages.EXCEPTION_AUTH_TOKEN_IS_NULL.value(),MessengerUtils.Property.CHAT_SERVICE_NAME.value()));
         chatServiceAccessToken = accessToken;
         chatServiceRefreshToken = refreshToken;
         return chatServiceAccessToken;
@@ -127,7 +129,7 @@ public class JwtAccessTokens {
         ResponseEntity<?> responseEntity = restTemplate.exchange(requestEntity,Object.class);
         String accessToken = responseEntity.getHeaders().getFirst(HEADER_ACCESS_TOKEN.value());
         if (accessToken==null)
-            throw new IllegalStateException("user service access token is null");
+            throw new IllegalStateException(String.format(MessengerUtils.Messages.EXCEPTION_AUTH_TOKEN_IS_NULL.value(),MessengerUtils.Property.USER_SERVICE_NAME.value()));
         return accessToken;
     }
 

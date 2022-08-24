@@ -19,8 +19,6 @@ import javax.persistence.PersistenceContext;
 public class MessageService {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Transactional
     public ChatMessage saveMessage(ChatMessage chatMessage) throws ChatMessageAlreadyExistsException {
