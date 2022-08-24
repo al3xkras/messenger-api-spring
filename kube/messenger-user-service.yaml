@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messenger-user-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: messenger-user-service
+  template:
+    metadata:
+      labels:
+        app: messenger-user-service
+    spec:
+      containers:
+      - name: messenger-user-service
+        image: messenger-user-service:1.1
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 10002
+        env:
+        - name: MYSQL_USER
+          valueFrom: 
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-user
+        - name: MYSQL_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        - name: MYSQL_URL
+          valueFrom: 
+            configMapKeyRef:
+              name: mysql-config
+              key: mysql-database-url
+              
+
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: messenger-user-service
+spec:
+  type: NodePort
+  selector:
+    app: messenger-user-service
+  ports:
+  - port: 80
+    targetPort: 10002
+    nodePort: 10002

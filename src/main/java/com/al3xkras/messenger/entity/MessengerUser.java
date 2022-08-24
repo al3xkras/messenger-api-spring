@@ -7,6 +7,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "messenger_user", uniqueConstraints = @UniqueConstraint(name = "messenger_user_username_un", columnNames = {"username"}))
 public class MessengerUser {
+
     @Transient
     public static MessengerUser FIRST_ADMIN = MessengerUser.builder()
             .username("admin")
@@ -37,7 +38,6 @@ public class MessengerUser {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
     private MessengerUserType messengerUserType;
-
 
     @SuppressWarnings("all")
     public static class MessengerUserBuilder {

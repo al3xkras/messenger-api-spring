@@ -5,10 +5,7 @@ import com.al3xkras.messenger.entity.Chat;
 import com.al3xkras.messenger.entity.ChatMessage;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.model.ChatMessageId;
-import com.al3xkras.messenger.model.ChatUserRole;
-import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.model.RestResponsePage;
+import com.al3xkras.messenger.model.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -198,21 +195,21 @@ class MessengerMessageServiceApplicationTest {
 
         ResponseEntity<MessengerUser> response;
         try {
-            response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+            response = restTemplate.exchange(RequestEntity.post(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(objectMapper.writeValueAsString(validUserDto1)), MessengerUser.class);
             assertNotNull(response.getBody());
             firstUser = response.getBody();
             assertNotNull(firstUser.getMessengerUserId());
 
-            response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+            response = restTemplate.exchange(RequestEntity.post(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(objectMapper.writeValueAsString(validUserDto2)), MessengerUser.class);
             assertNotNull(response.getBody());
             secondUser = response.getBody();
             assertNotNull(secondUser.getMessengerUserId());
 
-            response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+            response = restTemplate.exchange(RequestEntity.post(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(objectMapper.writeValueAsString(validUserDto3)), MessengerUser.class);
             assertNotNull(response.getBody());
@@ -242,7 +239,7 @@ class MessengerMessageServiceApplicationTest {
                 .build();
 
         try {
-            URI createChat = URI.create("http://localhost:10002/chat");
+            URI createChat = URI.create(MessengerUtils.Property.CHAT_SERVICE_URI.value()+"/chat");
 
             RequestEntity<String> requestEntity = RequestEntity.post(createChat)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -288,7 +285,7 @@ class MessengerMessageServiceApplicationTest {
                 .build();
 
         try {
-            URI addChatUser = URI.create("http://localhost:10002/chat/users");
+            URI addChatUser = URI.create(MessengerUtils.Property.CHAT_SERVICE_URI.value()+"/chat/users");
 
             RequestEntity<String> requestEntity = RequestEntity.post(addChatUser)
                     .contentType(MediaType.APPLICATION_JSON)

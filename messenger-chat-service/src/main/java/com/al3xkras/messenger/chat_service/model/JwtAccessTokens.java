@@ -30,10 +30,8 @@ public class JwtAccessTokens {
     private final JWTVerifier jwtVerifier = JWT.require(algorithm).build();
 
     public String getUserServiceAccessToken() throws Exception {
-        //TODO remove hardcoded URI
-        String userServicePrefix = MessengerUtils.Property.USER_SERVICE_URI_PREFIX.value();
-        String uri = "http://localhost:10001"+userServicePrefix+"/user/login";
-        String refreshUri = "http://localhost:10001"+userServicePrefix+"/user/refresh";
+        String uri = MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/login";
+        String refreshUri = MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/refresh";
 
         if (userServiceAccessToken!=null && userServiceRefreshToken!=null){
             if (jwtVerifier.verify(userServiceAccessToken).getExpiresAt().after(new Date(System.currentTimeMillis()+30*1000L))){

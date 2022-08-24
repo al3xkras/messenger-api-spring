@@ -2,6 +2,7 @@ package com.al3xkras.messenger.user_service.service;
 
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.repository.MessengerUserRepository;
@@ -45,8 +46,11 @@ public class MessengerUserService {
     public MessengerUser saveUser(MessengerUser messengerUser) throws MessengerUserAlreadyExistsException{
         try {
             messengerUser.setMessengerUserId(null);
-            if (messengerUser.getPassword()!=null)
+            if (messengerUser.getPassword()!=null) {
+                log.info("password encoded");
                 messengerUser.setPassword(passwordEncoder.encode(messengerUser.getPassword()));
+                log.info(passwordEncoder.encode(messengerUser.getPassword()));
+            }
             return messengerUserRepository.saveAndFlush(messengerUser);
         } catch (DataIntegrityViolationException e){
             throw new MessengerUserAlreadyExistsException(messengerUser.getUsername());
@@ -62,7 +66,7 @@ public class MessengerUserService {
         MessengerUser updated = MessengerUser.builder()
                 .messengerUserId(messengerUser.getMessengerUserId())
                 .username(messengerUser.getUsername()==null?beforeUpdate.getUsername():messengerUser.getUsername())
-                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():messengerUser.getPassword())
+                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():passwordEncoder.encode(messengerUser.getPassword()))
                 .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
                 .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
                 .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
@@ -85,7 +89,7 @@ public class MessengerUserService {
         MessengerUser updated = MessengerUser.builder()
                 .messengerUserId(beforeUpdate.getMessengerUserId())
                 .username(messengerUser.getUsername())
-                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():messengerUser.getPassword())
+                .password(messengerUser.getPassword()==null?beforeUpdate.getPassword():passwordEncoder.encode(messengerUser.getPassword()))
                 .name(messengerUser.getName()==null?beforeUpdate.getName():messengerUser.getName())
                 .surname(messengerUser.getSurname()==null?beforeUpdate.getSurname():messengerUser.getSurname())
                 .emailAddress(messengerUser.getEmailAddress()==null?beforeUpdate.getEmailAddress():messengerUser.getEmailAddress())
@@ -127,8 +131,18 @@ public class MessengerUserService {
     @PostConstruct
     private void postConstruct(){
         try {
-            saveUser(MessengerUser.FIRST_ADMIN);
-            log.info("saved: "+MessengerUser.FIRST_ADMIN.toString());
+            MessengerUser admin = MessengerUser.FIRST_ADMIN;
+            MessengerUser adminCopy = MessengerUser.builder()
+                    .messengerUserId(admin.getMessengerUserId())
+                    .name(admin.getName())
+                    .username(admin.getUsername())
+                    .password(admin.getPassword())
+                    .messengerUserType(admin.getMessengerUserType())
+                    .emailAddress(admin.getEmailAddress())
+                    .phoneNumber(admin.getPhoneNumber())
+                    .build();
+            saveUser(adminCopy);
+            log.info("saved: "+adminCopy);
         } catch (MessengerUserAlreadyExistsException ignored){}
     }
 }

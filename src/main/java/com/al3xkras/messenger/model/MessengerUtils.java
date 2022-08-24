@@ -49,9 +49,9 @@ public final class MessengerUtils {
         USER_SERVICE_NAME(messenger.getString("user-service.name")),
         CHAT_SERVICE_NAME(messenger.getString("chat-service.name")),
         MESSAGE_SERVICE_NAME(messenger.getString("message-service.name")),
-        USER_SERVICE_URI_PREFIX(messenger.getString("user-service.uri.prefix")),
-        CHAT_SERVICE_URI_PREFIX(messenger.getString("chat-service.uri.prefix")),
-        MESSAGE_SERVICE_URI_PREFIX(messenger.getString("message-service.uri.prefix")),
+        USER_SERVICE_URI("http://"+messenger.getString("messenger.host")+":"+messenger.getString("user-service.port")+messenger.getString("user-service.uri.prefix")),
+        CHAT_SERVICE_URI("http://"+messenger.getString("messenger.host")+":"+messenger.getString("chat-service.port")+messenger.getString("chat-service.uri.prefix")),
+        MESSAGE_SERVICE_URI("http://"+messenger.getString("messenger.host")+":"+messenger.getString("message-service.port")+messenger.getString("message-service.uri.prefix")),
         ENTITY_CHAT_USER(messenger.getString("entity.chat-user")),
         CHAT_USER_DEFAULT_TITLE(messenger.getString("entity.chat-user.user.default-title")),
         CHAT_ADMIN_DEFAULT_TITLE(messenger.getString("entity.chat-user.admin.default-title"));

@@ -37,9 +37,8 @@ public class JwtAccessTokens {
 
     public String getUserServiceAccessToken() throws Exception {
 
-        //TODO remove hardcode
-        String uri = "http://localhost:10001/user/login";
-        String refreshUri = "http://localhost:10001/user/refresh";
+        String uri = MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/login";
+        String refreshUri = MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/refresh";
 
         if (userServiceAccessToken!=null && userServiceRefreshToken!=null){
             if (jwtVerifier.verify(userServiceAccessToken).getExpiresAt().after(new Date(System.currentTimeMillis()+30*1000L))){
@@ -72,9 +71,8 @@ public class JwtAccessTokens {
     }
 
     public String getChatServiceAccessToken(String chatName) throws Exception {
-        //TODO remove hardcode
-        String uri = "http://localhost:10002/auth";
-        String refreshUri = "http://localhost:10002/refresh";
+        String uri = MessengerUtils.Property.CHAT_SERVICE_URI.value()+"/auth";
+        String refreshUri = MessengerUtils.Property.CHAT_SERVICE_URI.value()+"/refresh";
 
         if (chatServiceAccessToken!=null && chatServiceRefreshToken!=null){
             if (jwtVerifier.verify(chatServiceAccessToken).getExpiresAt().after(new Date(System.currentTimeMillis()+30*1000L))){

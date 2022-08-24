@@ -212,19 +212,19 @@ class MessengerChatServiceApplicationTests {
 		ResponseEntity<MessengerUser> response;
 		try {
 			response = restTemplate.exchange(RequestEntity
-						.get("http://localhost:10001/user?username="+firstUser.getUsername())
+						.get(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user?username="+firstUser.getUsername())
 						.header(HttpHeaders.AUTHORIZATION, firstUserTokenOfTypeAdmin).build(),
 					MessengerUser.class);
 			assertNotNull(response);
 			firstUser = response.getBody();
 			//No Auth required
-			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+			response = restTemplate.exchange(RequestEntity.post(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user")
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(objectMapper.writeValueAsString(validUserDto2)), MessengerUser.class);
 			assertNotNull(response.getBody());
 			secondUser = response.getBody();
 			//No Auth required
-			response = restTemplate.exchange(RequestEntity.post("http://localhost:10001/user")
+			response = restTemplate.exchange(RequestEntity.post(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user")
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(objectMapper.writeValueAsString(validUserDto3)), MessengerUser.class);
 			assertNotNull(response.getBody());
@@ -238,7 +238,7 @@ class MessengerChatServiceApplicationTests {
 	@Test
 	@Order(11)
 	void getUserToken(){
-		String requestUri = UriComponentsBuilder.fromUriString("http://localhost:10001/user/login")
+		String requestUri = UriComponentsBuilder.fromUriString(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/login")
 				.queryParam(USERNAME.value(),secondUser.getUsername())
 				.queryParam(PASSWORD.value(),secondUser.getPassword())
 				.toUriString();

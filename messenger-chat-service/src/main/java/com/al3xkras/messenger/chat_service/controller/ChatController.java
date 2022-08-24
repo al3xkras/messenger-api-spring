@@ -89,9 +89,7 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,EXCEPTION_USER_SERVICE_UNREACHABLE.value());
         }
 
-        //TODO remove hardcoded URI
-        String userServicePrefix = MessengerUtils.Property.USER_SERVICE_URI_PREFIX.value();
-        URI uri = URI.create("http://localhost:10001"+userServicePrefix+"/user/"+id);
+        URI uri = URI.create(MessengerUtils.Property.USER_SERVICE_URI.value()+"/user/"+id);
         RequestEntity<?> requestEntity = RequestEntity.get(uri)
                 .header(HttpHeaders.AUTHORIZATION,JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)
                 .build();

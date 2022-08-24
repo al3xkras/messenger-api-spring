@@ -6,7 +6,7 @@ spring:
       repositories:
         enabled: true
   datasource:
-    url: jdbc:mysql://localhost/messenger_db
+    url: jdbc:mysql://${mysql-host}/messenger_db
     driverClassName: com.mysql.cj.jdbc.Driver
     username: root
     password: root
