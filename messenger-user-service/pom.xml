@@ -13,9 +13,6 @@
 	<version>1.0</version>
 	<name>messenger-user-service</name>
 	<description>messenger-user-service</description>
-	<properties>
-		<java.version>1.8</java.version>
-	</properties>
 
 	<distributionManagement>
 		<repository>
@@ -114,5 +111,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<properties>
+		<maven.compiler.source>8</maven.compiler.source>
+        	<maven.compiler.target>8</maven.compiler.target>
+		<java.version>1.8</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
 
 </project>

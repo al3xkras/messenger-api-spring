@@ -2,8 +2,8 @@ package com.al3xkras.messenger.user_service;
 
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.model.MessengerResponse;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.MessengerUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.MethodOrderer;
@@ -456,7 +456,7 @@ class MessengerUserServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(usernameExistsWhenModifyByUserIdDto)))
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string(String.format(MessengerResponse.Messages.EXCEPTION_MESSENGER_USER_USERNAME_EXISTS.value(),usernameExistsWhenModifyByUserIdDto.getUsername())));
+				.andExpect(content().string(String.format(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_USERNAME_EXISTS.value(),usernameExistsWhenModifyByUserIdDto.getUsername())));
 
 		mockMvc.perform(put("/user")
 						.param("user-id",firstUser.getMessengerUserId().toString())
