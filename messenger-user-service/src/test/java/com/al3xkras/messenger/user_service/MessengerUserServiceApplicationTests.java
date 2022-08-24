@@ -269,7 +269,7 @@ class MessengerUserServiceApplicationTests {
 		mockMvc.perform(get("/user/"+10L)
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isNotFound())
-				.andExpect(content().string("user not found"));
+				.andExpect(content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
 
 		mockMvc.perform(get("/user/"+10L))
 				.andExpect(status().isForbidden());
@@ -312,7 +312,7 @@ class MessengerUserServiceApplicationTests {
 		mockMvc.perform(get("/user").param("username","user10000")
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken))
 				.andExpect(status().isNotFound())
-				.andExpect(content().string("user not found"));
+				.andExpect(content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
 
 		mockMvc.perform(get("/user").param("username","user10000")
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken))
@@ -564,7 +564,7 @@ class MessengerUserServiceApplicationTests {
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.param("username","user1897432"))
 				.andExpect(status().isNotFound())
-				.andExpect(content().string( "user not found"));
+				.andExpect(content().string( MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
 
 		mockMvc.perform(delete("/user")
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+secondUserToken)
@@ -579,7 +579,7 @@ class MessengerUserServiceApplicationTests {
 						.header(HttpHeaders.AUTHORIZATION,"Bearer "+adminToken)
 						.param("user-id",secondUser.getMessengerUserId().toString()))
 				.andExpect(status().isNotFound())
-				.andExpect(content().string( "user not found"));
+				.andExpect(content().string( MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
 
 	}
 

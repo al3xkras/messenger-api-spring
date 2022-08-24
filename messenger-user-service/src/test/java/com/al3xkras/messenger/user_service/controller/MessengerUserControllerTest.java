@@ -3,6 +3,8 @@ package com.al3xkras.messenger.user_service.controller;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.model.MessengerUtils;
+import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -94,7 +96,7 @@ class MessengerUserControllerTest {
                         .thenThrow(MessengerUserNotFoundException.class);
         mockMvc.perform(MockMvcRequestBuilders.get("/user/10"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
     }
 
     @Test
@@ -118,7 +120,7 @@ class MessengerUserControllerTest {
                 .thenThrow(MessengerUserNotFoundException.class);
         mockMvc.perform(MockMvcRequestBuilders.get("/user").param("username","user3"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
     }
 
     @Test
@@ -225,7 +227,8 @@ class MessengerUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedFirstUserDTO)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().string("please specify \"username\" or \"user-id\""));
+                .andExpect(MockMvcResultMatchers.content().string(String.format(MessengerUtils.Messages.EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ",JwtTokenAuth.Param.USERNAME.value(),JwtTokenAuth.Param.USER_ID.value()))));
     }
 
     @Test
@@ -251,14 +254,14 @@ class MessengerUserControllerTest {
                         .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
                         .param("user-id","1"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
 
         mockMvc.perform(MockMvcRequestBuilders.put("/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedFirstUserDTO))
                         .param("username","user1"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
     }
 
     @Test
@@ -303,16 +306,17 @@ class MessengerUserControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("user-id",firstUser.getMessengerUserId().toString()))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
         mockMvc.perform(MockMvcRequestBuilders.delete("/user").param("username",firstUser.getUsername()))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().string("user not found"));
+                .andExpect(MockMvcResultMatchers.content().string(MessengerUtils.Messages.EXCEPTION_MESSENGER_USER_NOT_FOUND.value()));
     }
 
     @Test
     void whenDeleteUser_andNoUsernameOrIdIsSpecified_thenThrowHttpStatusBadRequest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/user"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().string("please specify \"username\" or \"user-id\""));
+                .andExpect(MockMvcResultMatchers.content().string(String.format(MessengerUtils.Messages.EXCEPTION_REQUIRED_PARAMETERS_ARE_NULL.value(),
+                        String.join(", ",JwtTokenAuth.Param.USERNAME.value(),JwtTokenAuth.Param.USER_ID.value()))));
     }
 }

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.al3xkras</groupId>
 	<artifactId>messenger-user-service</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>messenger-user-service</name>
 	<description>messenger-user-service</description>
 
