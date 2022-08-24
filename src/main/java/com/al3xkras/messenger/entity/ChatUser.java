@@ -2,6 +2,7 @@ package com.al3xkras.messenger.entity;
 
 import com.al3xkras.messenger.model.ChatUserId;
 import com.al3xkras.messenger.model.ChatUserRole;
+
 import javax.persistence.*;
 
 @Entity

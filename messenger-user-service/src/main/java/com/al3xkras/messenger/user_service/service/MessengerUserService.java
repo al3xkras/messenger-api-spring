@@ -19,8 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 
-import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
-import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+import static com.al3xkras.messenger.model.MessengerUtils.Messages.EXCEPTION_ARGUMENT_ISNULL;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USERNAME;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USER_ID;
 
 @Slf4j
 @Service

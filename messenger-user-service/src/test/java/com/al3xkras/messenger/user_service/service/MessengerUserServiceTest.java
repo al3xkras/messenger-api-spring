@@ -1,9 +1,9 @@
 package com.al3xkras.messenger.user_service.service;
 
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
-import com.al3xkras.messenger.model.MessengerUserType;
 import com.al3xkras.messenger.user_service.repository.MessengerUserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

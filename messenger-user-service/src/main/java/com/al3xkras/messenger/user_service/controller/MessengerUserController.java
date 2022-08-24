@@ -2,9 +2,7 @@ package com.al3xkras.messenger.user_service.controller;
 
 import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.al3xkras.messenger.user_service.exception.MessengerUserAlreadyExistsException;
 import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
 import com.al3xkras.messenger.user_service.service.MessengerUserService;
@@ -21,7 +19,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
-import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USERNAME;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.USER_ID;
 
 @Slf4j
 @RestController

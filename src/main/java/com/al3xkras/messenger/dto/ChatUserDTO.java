@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.dto;
 
 import com.al3xkras.messenger.model.ChatUserRole;
+
 import javax.validation.constraints.NotNull;
 
 public class ChatUserDTO {

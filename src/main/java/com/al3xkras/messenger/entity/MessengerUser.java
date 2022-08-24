@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.entity;
 
 import com.al3xkras.messenger.model.MessengerUserType;
+
 import javax.persistence.*;
 
 @Entity

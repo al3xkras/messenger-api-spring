@@ -1,19 +1,21 @@
 package com.al3xkras.messenger.user_service;
 
+import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.al3xkras.messenger.entity.MessengerUser;
 import com.al3xkras.messenger.model.MessengerResponse;
 import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.dto.MessengerUserDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 

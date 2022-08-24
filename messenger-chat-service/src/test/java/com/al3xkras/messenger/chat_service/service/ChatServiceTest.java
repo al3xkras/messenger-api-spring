@@ -1,14 +1,14 @@
 package com.al3xkras.messenger.chat_service.service;
 
+import com.al3xkras.messenger.chat_service.exception.ChatNameAlreadyExistsException;
+import com.al3xkras.messenger.chat_service.exception.InvalidMessengerUserException;
+import com.al3xkras.messenger.chat_service.repository.ChatRepository;
+import com.al3xkras.messenger.chat_service.repository.ChatUserRepository;
 import com.al3xkras.messenger.entity.Chat;
 import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.chat_service.exception.ChatNameAlreadyExistsException;
-import com.al3xkras.messenger.chat_service.exception.InvalidMessengerUserException;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.chat_service.repository.ChatRepository;
-import com.al3xkras.messenger.chat_service.repository.ChatUserRepository;
 import org.hibernate.TransientPropertyValueException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

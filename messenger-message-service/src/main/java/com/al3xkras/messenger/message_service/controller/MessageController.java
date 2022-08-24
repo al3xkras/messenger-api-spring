@@ -1,17 +1,15 @@
 package com.al3xkras.messenger.message_service.controller;
 
-import com.al3xkras.messenger.message_service.exception.ChatMessageAlreadyExistsException;
-import com.al3xkras.messenger.message_service.model.JwtAccessTokens;
-import com.al3xkras.messenger.message_service.service.MessageService;
 import com.al3xkras.messenger.dto.MessageDTO;
 import com.al3xkras.messenger.dto.PageRequestDto;
 import com.al3xkras.messenger.entity.ChatMessage;
+import com.al3xkras.messenger.message_service.exception.ChatMessageAlreadyExistsException;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
+import com.al3xkras.messenger.message_service.service.MessageService;
 import com.al3xkras.messenger.model.ChatMessageId;
 import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.model.authorities.ChatUserAuthority;
 import com.al3xkras.messenger.model.security.ChatUserAuthenticationToken;
-import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -26,10 +24,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
-import java.net.URI;
 import java.util.Collection;
 
-import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.CHAT_ID;
+import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.CHAT_NAME;
 
 @RestController
 public class MessageController {

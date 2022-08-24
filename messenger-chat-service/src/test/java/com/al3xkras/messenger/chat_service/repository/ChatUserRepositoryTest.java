@@ -1,11 +1,11 @@
 package com.al3xkras.messenger.chat_service.repository;
 
 import com.al3xkras.messenger.entity.Chat;
+import com.al3xkras.messenger.entity.ChatUser;
 import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.ChatUserId;
 import com.al3xkras.messenger.model.ChatUserRole;
 import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.entity.ChatUser;
-import com.al3xkras.messenger.model.ChatUserId;
 import org.hibernate.TransientPropertyValueException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +16,13 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @DataJpaTest

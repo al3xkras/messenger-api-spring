@@ -14,7 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.al3xkras.messenger.model.MessengerUtils.*;
+import static com.al3xkras.messenger.model.MessengerUtils.Messages;
+import static com.al3xkras.messenger.model.MessengerUtils.Property;
 
 @Slf4j
 public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {

@@ -1,10 +1,10 @@
 package com.al3xkras.messenger.user_service.controller;
 
-import com.al3xkras.messenger.entity.MessengerUser;
-import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
-import com.al3xkras.messenger.model.MessengerUserType;
-import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import com.al3xkras.messenger.dto.MessengerUserDTO;
+import com.al3xkras.messenger.entity.MessengerUser;
+import com.al3xkras.messenger.model.MessengerUserType;
+import com.al3xkras.messenger.user_service.exception.MessengerUserNotFoundException;
+import com.al3xkras.messenger.user_service.service.MessengerUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

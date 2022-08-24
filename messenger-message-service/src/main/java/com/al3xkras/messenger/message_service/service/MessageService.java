@@ -3,17 +3,14 @@ package com.al3xkras.messenger.message_service.service;
 import com.al3xkras.messenger.entity.ChatMessage;
 import com.al3xkras.messenger.message_service.exception.ChatMessageAlreadyExistsException;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
-import com.al3xkras.messenger.model.ChatMessageId;
 import com.al3xkras.messenger.message_service.repository.ChatMessageRepository;
+import com.al3xkras.messenger.model.ChatMessageId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 @Service
 public class MessageService {

@@ -1,6 +1,7 @@
 package com.al3xkras.messenger.dto;
 
 import com.al3xkras.messenger.model.MessengerUserType;
+
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.Email;

@@ -2,7 +2,7 @@ package com.al3xkras.messenger.entity;
 
 import com.al3xkras.messenger.model.ChatMessageId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.ToString;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 

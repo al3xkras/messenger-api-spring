@@ -2,8 +2,8 @@ package com.al3xkras.messenger.message_service.service;
 
 import com.al3xkras.messenger.entity.ChatMessage;
 import com.al3xkras.messenger.message_service.exception.ChatMessageNotFoundException;
-import com.al3xkras.messenger.model.ChatMessageId;
 import com.al3xkras.messenger.message_service.repository.ChatMessageRepository;
+import com.al3xkras.messenger.model.ChatMessageId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")

@@ -3,7 +3,7 @@ package com.al3xkras.messenger.model.security;
 import com.al3xkras.messenger.model.ChatUserRole;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import java.util.Collection;
 
 public class ChatUserAuthenticationToken extends AbstractAuthenticationToken {
