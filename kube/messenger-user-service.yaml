@@ -15,12 +15,13 @@ spec:
       containers:
       - name: messenger-user-service
         image: messenger-user-service:1.1
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             memory: "256Mi"
             cpu: "500m"
         ports:
-        - containerPort: 10002
+        - containerPort: 10001
         env:
         - name: MYSQL_USER
           valueFrom: 
@@ -48,10 +49,10 @@ kind: Service
 metadata:
   name: messenger-user-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: messenger-user-service
   ports:
-  - port: 80
-    targetPort: 10002
-    nodePort: 10002
+  - port: 10001
+    targetPort: 10001
+    nodePort: 30001

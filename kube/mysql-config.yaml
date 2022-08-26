@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mysql-sonfig
+  name: mysql-config
 data:
   mysql-database-name: messenger_db
   mysql-database-url: mysql-service

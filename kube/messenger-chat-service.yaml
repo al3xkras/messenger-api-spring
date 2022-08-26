@@ -15,25 +15,26 @@ spec:
       containers:
       - name: messenger-chat-service
         image: messenger-chat-service:1.1
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             memory: "256Mi"
             cpu: "500m"
         ports:
-        - containerPort: 10001
+        - containerPort: 10002
         env:
         - name: MYSQL_USER
-          valueFrom: 
+          valueFrom:
             secretKeyRef:
               name: mysql-secret
               key: mysql-user
         - name: MYSQL_PASSWORD
-          valueFrom: 
+          valueFrom:
             secretKeyRef:
               name: mysql-secret
               key: mysql-password
         - name: MYSQL_URL
-          valueFrom: 
+          valueFrom:
             configMapKeyRef:
               name: mysql-config
               key: mysql-database-url
@@ -45,11 +46,11 @@ kind: Service
 metadata:
   name: messenger-chat-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: messenger-chat-service
   ports:
   - protocol: TCP
-    port: 80
-    targetPort: 10001
-    nodePort: 10001
+    port: 10002
+    targetPort: 10002
+    nodePort: 30002
