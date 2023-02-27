@@ -10,6 +10,7 @@ public class MessengerUser {
 
     @Transient
     public static MessengerUser FIRST_ADMIN = MessengerUser.builder()
+            .messengerUserId(1L)
             .username("admin")
             .password("Password123.")
             .messengerUserType(MessengerUserType.ADMIN)

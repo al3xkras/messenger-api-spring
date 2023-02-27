@@ -9,6 +9,19 @@ cd ./messenger-message-service
 mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
 cd ../
 
+
+(or)
+mvn clean install -Dfile.encoding=UTF-8
+cd ./messenger-user-service
+mvn clean install -Dfile.encoding=UTF-8
+cd ../
+cd ./messenger-chat-service
+mvn clean install -Dfile.encoding=UTF-8
+cd ../
+cd ./messenger-message-service
+mvn clean install -Dfile.encoding=UTF-8
+cd ../
+
 docker rm messenger-user-service
 docker rm messenger-chat-service
 docker rm messenger-message-service
