@@ -1,6 +1,6 @@
 /delombok/
 cmdline.txt
-
+/.ipynb_checkpoints
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
