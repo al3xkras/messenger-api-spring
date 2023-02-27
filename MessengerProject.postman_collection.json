@@ -1,0 +1,777 @@
+{
+	"info": {
+		"_postman_id": "9b010a44-af2f-4e5b-b851-c06693e5c71d",
+		"name": "MessengerProject",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22117193"
+	},
+	"item": [
+		{
+			"name": "security test (user service), no auth - forbidden",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Password123.",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10001/user/login",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service auth",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:10002/auth?user-access-token=Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5NzE5M30.gxWx82fGMtPCvGvufqhpqF3ZaqdOusTclJhJiF3z6AM",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"auth"
+					],
+					"query": [
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5NzE5M30.gxWx82fGMtPCvGvufqhpqF3ZaqdOusTclJhJiF3z6AM"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service: create chat",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0LW5hbWUgYWRtaW4iLCJyb2xlcyI6IkFOT05ZTU9VUyIsInVzZXItaWQiOjEsImlzcyI6Ii9hdXRoIiwiZXhwIjoxNjc3NTAxOTQ4LCJjaGF0LWlkIjowfQ.h0g1pIULG9R0g5QLA5BRZGOhvb7rloxfgcm83alcFK0",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5NzE5M30.gxWx82fGMtPCvGvufqhpqF3ZaqdOusTclJhJiF3z6AM",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"chatName\":\"chat1\",\r\n    \"displayName\":\"Chat 1\",\r\n    \"ownerId\":\"1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10002/chat",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chat"
+					],
+					"query": [
+						{
+							"key": "user-access-token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5NzE5M30.gxWx82fGMtPCvGvufqhpqF3ZaqdOusTclJhJiF3z6AM",
+							"disabled": true
+						},
+						{
+							"key": "chatId",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "chatName",
+							"value": "chat2",
+							"disabled": true
+						},
+						{
+							"key": "displayName",
+							"value": "Chat 2",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service:  chat auth",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0LW5hbWUgYWRtaW4iLCJyb2xlcyI6IkFOT05ZTU9VUyIsInVzZXItaWQiOjEsImlzcyI6Ii9hdXRoIiwiZXhwIjoxNjc3NDk5MTA5LCJjaGF0LWlkIjowfQ.L4Vipsm1vnKhQ5aPLlm-8wvfdcRQmeQIhyFdmNVKddQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY2MTM2MDA2Mn0.u4_rDVDnMLvtjKlu-Pdj27KtwSM8dM9gR6-dijyu07w",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "chat-name",
+							"value": "chat-name",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10002/auth?chat-name=chat1&user-access-token=Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5OTU3Mn0.uf00SAUQeYYtc3XsZCCm4kbmbMTsDsTdWW81Kp-u69Q",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"auth"
+					],
+					"query": [
+						{
+							"key": "chat-name",
+							"value": "chat1"
+						},
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5OTU3Mn0.uf00SAUQeYYtc3XsZCCm4kbmbMTsDsTdWW81Kp-u69Q"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service: get chat by name (auth correct)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0MSBhZG1pbiIsInJvbGVzIjoiU1VQRVJfQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvYXV0aCIsImV4cCI6MTY3NzUwMDA2NiwiY2hhdC1pZCI6MX0.XZWB4NG7LcW8FnSB2PDydJx-fjPIj_NiCIwK684hjqw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:10002/chat?chat-name=chat1",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chat"
+					],
+					"query": [
+						{
+							"key": "chat-name",
+							"value": "chat1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user with access token",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY2MTUzMzUyNX0.devIbnXDqgD_lKoKV_yH3rggmP0dUeknDHbqipASHyE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:10001/user/1",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add user",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"user2\",\r\n    \"password\":\"PWord234_\",\r\n    \"name\":\"John\",\r\n    \"surname\":\"Doe\",\r\n    \"email\":\"john@gmail.com\",\r\n    \"phoneNumber\":\"+23 545-55-25\",\r\n    \"messengerUserType\":\"USER\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10001/user",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user service - login",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Password123.",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10001/user/login?username=user2&password=PWord234_",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user",
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "user2"
+						},
+						{
+							"key": "password",
+							"value": "PWord234_"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "modify user",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMiIsInJvbGVzIjoiVVNFUiIsInVzZXItaWQiOjIsImlzcyI6Ii91c2VyL2xvZ2luIiwiZXhwIjoxNjc3NTAyMDY3fQ.ZSm2hp87q0ruOufXrhswvOABiB5tr_Dpv-hrNwuMa9s",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"user2\",\r\n    \"password\":\"PWord234__\",\r\n    \"name\":\"John\",\r\n    \"surname\":\"Doe\",\r\n    \"email\":\"john@gmail.com\",\r\n    \"phoneNumber\":\"+23 545-55-25\",\r\n    \"messengerUserType\":\"USER\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10001/user?user-id=2",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user"
+					],
+					"query": [
+						{
+							"key": "user-id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user service - login after modification",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Password123.",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10001/user/login?username=user2&password=PWord234__",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"user",
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "user2"
+						},
+						{
+							"key": "password",
+							"value": "PWord234__"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service:  new user no chat auth",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0LW5hbWUgYWRtaW4iLCJyb2xlcyI6IkFOT05ZTU9VUyIsInVzZXItaWQiOjEsImlzcyI6Ii9hdXRoIiwiZXhwIjoxNjc3NDk5MTA5LCJjaGF0LWlkIjowfQ.L4Vipsm1vnKhQ5aPLlm-8wvfdcRQmeQIhyFdmNVKddQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY2MTM2MDA2Mn0.u4_rDVDnMLvtjKlu-Pdj27KtwSM8dM9gR6-dijyu07w",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "chat-name",
+							"value": "chat-name",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10002/auth?user-access-token=Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMiIsInJvbGVzIjoiVVNFUiIsInVzZXItaWQiOjIsImlzcyI6Ii91c2VyL2xvZ2luIiwiZXhwIjoxNjc3NTAyMTAzfQ.KFGzVZk49ljaFIKAuiSYoOqn0w_6MKYrdeuEDkTV8po",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"auth"
+					],
+					"query": [
+						{
+							"key": "chat-name",
+							"value": "chat1",
+							"disabled": true
+						},
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMiIsInJvbGVzIjoiVVNFUiIsInVzZXItaWQiOjIsImlzcyI6Ii91c2VyL2xvZ2luIiwiZXhwIjoxNjc3NTAyMTAzfQ.KFGzVZk49ljaFIKAuiSYoOqn0w_6MKYrdeuEDkTV8po"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service: create chat 2",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0LW5hbWUgdXNlcjIiLCJyb2xlcyI6IkFOT05ZTU9VUyIsInVzZXItaWQiOjIsImlzcyI6Ii9hdXRoIiwiZXhwIjoxNjc3NTAyMTE4LCJjaGF0LWlkIjowfQ.HadDo4ReD13YUBXjb_TK2-ICwjVzWwmqcRNlhIjJcSc",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY3NzQ5NzE5M30.gxWx82fGMtPCvGvufqhpqF3ZaqdOusTclJhJiF3z6AM",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"chatName\":\"chat2\",\r\n    \"displayName\":\"Chat 2\",\r\n    \"ownerId\":2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10002/chat",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat service:  chat auth 2",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoxLCJpc3MiOiIvdXNlci9sb2dpbiIsImV4cCI6MTY2MTM2MDA2Mn0.u4_rDVDnMLvtjKlu-Pdj27KtwSM8dM9gR6-dijyu07w",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "chat-name",
+							"value": "chat-name",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:10002/auth?chat-name=chat2&user-access-token=Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMiIsInJvbGVzIjoiVVNFUiIsInVzZXItaWQiOjIsImlzcyI6Ii91c2VyL2xvZ2luIiwiZXhwIjoxNjc3NTAyMTAzfQ.KFGzVZk49ljaFIKAuiSYoOqn0w_6MKYrdeuEDkTV8po",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"auth"
+					],
+					"query": [
+						{
+							"key": "chat-name",
+							"value": "chat2"
+						},
+						{
+							"key": "user-access-token",
+							"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMiIsInJvbGVzIjoiVVNFUiIsInVzZXItaWQiOjIsImlzcyI6Ii91c2VyL2xvZ2luIiwiZXhwIjoxNjc3NTAyMTAzfQ.KFGzVZk49ljaFIKAuiSYoOqn0w_6MKYrdeuEDkTV8po"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get chat by id",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0MiB1c2VyMiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoyLCJpc3MiOiIvYXV0aCIsImV4cCI6MTY3NzUwMjI1OCwiY2hhdC1pZCI6Mn0.cW1K9Tdm3z-0y6Q4j8_YWf5bOmzcKnMOtTmTOx_M-_E",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"page\":0,\r\n    \"size\":5\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10002/chats?user-id=2",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chats"
+					],
+					"query": [
+						{
+							"key": "user-id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get chat by name",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0MiB1c2VyMiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoyLCJpc3MiOiIvYXV0aCIsImV4cCI6MTY3NzUwMjI1OCwiY2hhdC1pZCI6Mn0.cW1K9Tdm3z-0y6Q4j8_YWf5bOmzcKnMOtTmTOx_M-_E",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:10002/chat?chat-name=chat2",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chat"
+					],
+					"query": [
+						{
+							"key": "chat-name",
+							"value": "chat2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add user to a chat",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGF0MiB1c2VyMiIsInJvbGVzIjoiQURNSU4iLCJ1c2VyLWlkIjoyLCJpc3MiOiIvYXV0aCIsImV4cCI6MTY3NzUwMjI1OCwiY2hhdC1pZCI6Mn0.cW1K9Tdm3z-0y6Q4j8_YWf5bOmzcKnMOtTmTOx_M-_E",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"chatId\":2,\r\n    \"userId\":1,\r\n    \"title\":\"new user\",\r\n    \"chatUserRole\":\"USER\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:10002/chat/users",
+					"host": [
+						"localhost"
+					],
+					"port": "10002",
+					"path": [
+						"chat",
+						"users"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
