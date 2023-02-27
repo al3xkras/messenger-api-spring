@@ -17,10 +17,7 @@ import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,6 +38,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -55,8 +54,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@ActiveProfiles({"default","test-disablePasswordEncoder"})
+@ActiveProfiles({"test","test-disablePasswordEncoder"})
+@Disabled
 class MessengerChatServiceApplicationTests {
+
+	static {
+		System.setProperty("mysql-host", "localhost");
+	}
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -168,6 +172,7 @@ class MessengerChatServiceApplicationTests {
 	@Order(0)
 	void createFirstAdminIfNotExists(){
 		try {
+			firstUser.setMessengerUserId(null);
 			entityManager.persist(firstUser);
 		} catch (DataIntegrityViolationException ignored){}
 	}

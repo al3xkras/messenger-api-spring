@@ -22,6 +22,10 @@ cd ./messenger-message-service
 mvn clean install -Dfile.encoding=UTF-8
 cd ../
 
+docker stop messenger-user-service
+docker stop messenger-chat-service
+docker stop messenger-message-service
+
 docker rm messenger-user-service
 docker rm messenger-chat-service
 docker rm messenger-message-service
