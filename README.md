@@ -1,0 +1,96 @@
+### Messenger API
+
+Project structure:
+
+- The project is built according to the Microservice architecture pattern (each microservice is stateless)
+- List of microservices:
+    1. User service: (endpoints):
+        - (POST) /auth : authentication endpoint (declared in the AuthFilter)
+            - Parameters: ?username=user&password=pwd
+            - Request body: none
+            - Authentication result: Bearer token (sent as a response header) 
+        - (GET) /user/{id}: get user by id:
+            - "Authentication" header: "Bearer %s", %s - user auth token
+            - Response body: MessengerUserDTO (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (GET) /user?username=name - get user by username
+            - "Authentication" header: "Bearer %s", %s - user auth token
+            - Response body: MessengerUserDTO (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (POST) /user - add new user
+            - auth: no authentication (anonymous)
+            - Request body: MessengerUserDTO (JSON)
+            - Response body: MessengeruserDTO with encrypted password and userID
+        - (PUT) /user ?username=%s OR ?user-id=%d: modify user data
+            - "Authentication" header: "Bearer %s", %s - user auth token
+            - Request body: MessengerUserDTO (JSON)
+            - Response body: MessengeruserDTO with modified data (and encrypted password)
+        - (DELETE) /user ?username=%s OR ?user-id=%d: delete user
+            - "Authentication" header: "Bearer %s", %s - user auth token
+            - Response: HTTP 200 OK or HTTP 403 Forbidden or HTTP 400 BadRequest
+    1. Chat service: (endpoints):
+        - (POST) /auth ?user-access-token=%s&chat-name=%s: chat authentication endpoint (declared in the AuthFilter)
+            - authorize a user (user-access-tokes) for a specific chat (or give the authority to create chats, if chat name is not specified)
+            - Parameters: user-access-token: user service access token; chat-name: chat name or \<empty>
+            - Request body: none
+            - Authentication result: Bearer token (sent as a response header) 
+        - (GET) /chats ?username=%s OR ?user-id=%d: get chats by user id
+            - RequestBody: PageRequestDTO (Pageable)
+            - ResponseBody: Page\<Chat> (JSON)
+        - (POST) /chat: create a new chat
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to create chats)
+            - RequestBody: ChatDTO (JSON)
+            - ResponseBody: Chat (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (GET) /chat: get chat info
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to read chat info)
+            - Parameters: ?chat-id=%d OR ?chat-name=%s
+            - Response body: Chat (JSON)
+        - (PUT) /chat: modify chat info:
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to modify chat info)
+            - Request body: ChatDTO
+            - Response body: Chat (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (POST) /chat/users: add a user to a chat
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to add new users)
+            - Request Body: ChatUserDTO (JSON)
+            - Response body: ChatUser (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (PUT) /chat/users: modify chat user data
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to modify user info)
+            - Parameters: ?chat-id=%d AND ?user-id=%s
+            - Request body: ChatUserDTO (JSON)
+            - Response body: ChatUser (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (DELETE) /chat/users: delete chat user
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to delete chat user)
+            - Parameters: ?chat-id=%d AND ?user-id=%s - id of chat user to delete
+            - Response body: ResponseEntity\<String> : delete message; or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (GET) /chat/users : get chat users by chat
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to read chat users)
+            - Parameters: ?chat-id=%d OR ?chat-name=%s
+            - Response body: Page\<ChatUser> - chat users; or HTTP 403 Forbidden or HTTP 400 BadRequest
+            
+    2. Message service: (endpoints):
+        - (POST) /auth: authentication endpoint (not implemented, chat service authentication is used)
+        - (POST) /message: post a message
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to send messages)
+            - Request body: MessageDTO (JSON)
+            - Response body: ChatMessage (JSON) or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (GET) /message : get chat message by id
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to read messages)
+            - Request body: ChatMessageId (chat id, user id, submission time)
+            - Response body: ChatMessage or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (GET) /messages : find all chat messages by chat
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to read messages)
+            - Parameters: ?chat-id=%d OR ?chat-name=%s
+            - Request body: PageRequestDTO (Pageable, JSON)
+            - Response body: Page\<ChatMessage> or HTTP 403 Forbidden or HTTP 400 BadRequest
+        - (PUT) /message: edit chat message
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to edit messages)
+            - Request body: MessageDTO (edited message, JSON)
+            - Response body: ChatMessage (updated message, JSON)
+        - (DELETE) /message: delete message by id:
+            - "Authentication" header: "Bearer %s", %s - chat user auth token (should have the authority to delete messages)
+            - Request body: ChatMessageId (chat id, user id, submission time)
+            - Response: HTTP 200 OK or HTTP 403 Forbidden or HTTP 400 BadRequest
+- Database connection:
+    - ENV "mysql-host": environment variable (default: localhost): MySQL database host
+    - username & password: specified in the config file: $application.yml$
+    - driver: $\textit{com.mysql.cj.jdbc.Driver}$
+- Spring Boot profiles:
+    - \#todo add description
