@@ -115,7 +115,9 @@ public class ChatController {
         }
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         if (chatDTO.getOwnerId()==null || !chatDTO.getOwnerId().equals(token.getUserId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, EXCEPTION_CHAT_OWNER_ID_IS_INVALID.value());
+            log.error(token.getUserId().toString());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format(EXCEPTION_CHAT_OWNER_ID_IS_INVALID.value(),chatDTO.getOwnerId().toString()));
+
         }
         Chat chat = Chat.builder()
                 .chatName(chatDTO.getChatName())
@@ -185,6 +187,7 @@ public class ChatController {
                 .title(chatUserDTO.getTitle())
                 .chatUserRole(chatUserDTO.getChatUserRole())
                 .build();
+        log.info(chatUserDTO.toString());
         return chatService.addChatUser(chatUser);
     }
 

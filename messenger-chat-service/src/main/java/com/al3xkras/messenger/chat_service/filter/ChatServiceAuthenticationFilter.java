@@ -126,6 +126,7 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         if (!userAuth.startsWith(prefix)) {
             String message = String.format(EXCEPTION_AUTH_TOKEN_IS_INVALID.value(),USER_TOKEN.value());
             log.warn(message);
+            log.error(userAuth);
             throw new BadCredentialsException(message);
         }
 
@@ -136,6 +137,7 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
         } catch (Exception e){
             String message = String.format(EXCEPTION_AUTH_TOKEN_IS_INVALID.value(),USER_TOKEN.value());
             log.warn(message);
+            log.error("auth",e);
             throw new BadCredentialsException(message);
         }
 

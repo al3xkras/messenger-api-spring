@@ -129,7 +129,7 @@ class ChatControllerTest {
                 .build();
 
         String accessToken = "someToken ______";
-        String userServicePrefix = MessengerUtils.Property.USER_SERVICE_URI_PREFIX.value();
+        String userServicePrefix = "";
         URI uri = URI.create("http://localhost:10001"+userServicePrefix+"/user/"+1L);
         RequestEntity<?> requestEntity = RequestEntity.get(uri)
                 .header(HttpHeaders.AUTHORIZATION, JwtTokenAuth.PREFIX_WITH_WHITESPACE+accessToken)

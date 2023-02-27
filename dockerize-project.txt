@@ -8,12 +8,23 @@ cd ../
 cd ./messenger-message-service
 mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
 cd ../
+
+docker rm messenger-user-service
+docker rm messenger-chat-service
+docker rm messenger-message-service
+
 docker image rm -f messenger-user-service:1.1
 docker image rm -f messenger-chat-service:1.1
 docker image rm -f messenger-message-service:1.1
+
 docker build -t messenger-user-service:1.1 ./messenger-user-service
 docker build -t messenger-chat-service:1.1 ./messenger-chat-service
 docker build -t messenger-message-service:1.1 ./messenger-message-service
+
 docker run --name messenger-user-service -d -p 10001:10001 messenger-user-service:1.1
 docker run --name messenger-chat-service -d -p 10002:10002 messenger-chat-service:1.1
 docker run --name messenger-message-service -d -p 10003:10003 messenger-message-service:1.1
+
+docker start messenger-user-service
+docker start messenger-chat-service
+docker start messenger-message-service

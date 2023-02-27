@@ -48,6 +48,8 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
         } catch (Exception e){
             String message=String.format(EXCEPTION_AUTH_TOKEN_IS_INVALID.value(), MessengerUtils.Property.ENTITY_CHAT_USER.value());
             log.warn(message);
+            log.error("auth",e);
+            log.error(authHeader.substring(prefix.length()));
             response.sendError(HttpStatus.FORBIDDEN.value(),message);
             return;
         }
@@ -84,6 +86,10 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
                 if (!((readingSelfChatInfo && authorities.contains(ChatUserAuthority.READ_SELF_CHATS_INFO)) ||
                         (!readingSelfChatInfo && authorities.contains(ChatUserAuthority.READ_ANY_CHATS_INFO_EXCEPT_SELF)))){
                     log.warn(messageForbidden);
+                    log.warn(authorities.toString());
+                    log.warn(authToken.toString());
+                    log.warn(authToken.getUsername());
+                    log.warn(authToken.getChatName());
                     response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
                     return;
                 }
