@@ -37,6 +37,7 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         }
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.info("auth header: "+authHeader);
         if (authHeader==null){
             log.warn(EXCEPTION_AUTHORIZE.value());
             response.sendError(HttpStatus.FORBIDDEN.value(), EXCEPTION_AUTHORIZE.value());
@@ -53,6 +54,7 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         MessengerUserAuthenticationToken authResult;
         try {
             String token = authHeader.substring(prefix.length());
+            log.info("token: "+token);
             authResult = JwtTokenAuth.verifyMessengerUserToken(token);
         } catch (Exception e){
             log.warn(EXCEPTION_AUTHORIZE.value(),e);

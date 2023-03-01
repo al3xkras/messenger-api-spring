@@ -4,6 +4,7 @@ import com.al3xkras.messenger.model.MessengerUtils;
 import com.al3xkras.messenger.user_service.model.MessengerUserDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.*;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
@@ -38,7 +41,6 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
 
         log.info("username: "+username);
         log.info("password: "+password);
-
         if (username==null || password==null || username.isEmpty() || password.isEmpty())
             throw new BadCredentialsException(MessengerUtils.Messages.EXCEPTION_AUTHORIZE.value());
 
@@ -64,7 +66,13 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
 
-        response.setHeader(HEADER_ACCESS_TOKEN.value(), accessToken);
-        response.setHeader(HEADER_REFRESH_TOKEN.value(),refreshToken);
+        Map<String,String> body = new HashMap<>();
+        body.put(HEADER_ACCESS_TOKEN.value(), accessToken);
+        body.put(HEADER_REFRESH_TOKEN.value(),refreshToken);
+        String json = new ObjectMapper().writeValueAsString(body);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().print(json);
+        response.getWriter().flush();
     }
 }
