@@ -68,6 +68,8 @@ public class MessengerUserController {
 
     @PostMapping
     public MessengerUser addNewUser(@RequestBody @Valid MessengerUserDTO messengerUserDto) throws MessengerUserAlreadyExistsException {
+        if (messengerUserDto.getMessengerUserType()==null)
+            messengerUserDto.setMessengerUserType(MessengerUserType.USER);
         if (!activeProfiles.contains("no-security") && !messengerUserDto.getMessengerUserType().equals(MessengerUserType.USER))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     EXCEPTION_MESSENGER_USER_PERSIST_INVALID_USER_TYPE.value());

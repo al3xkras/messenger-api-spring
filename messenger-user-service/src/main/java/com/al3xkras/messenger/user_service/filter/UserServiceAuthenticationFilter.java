@@ -36,6 +36,9 @@ public class UserServiceAuthenticationFilter extends UsernamePasswordAuthenticat
         String username = request.getParameter(USERNAME.value());
         String password = request.getParameter(PASSWORD.value());
 
+        log.info("username: "+username);
+        log.info("password: "+password);
+
         if (username==null || password==null || username.isEmpty() || password.isEmpty())
             throw new BadCredentialsException(MessengerUtils.Messages.EXCEPTION_AUTHORIZE.value());
 

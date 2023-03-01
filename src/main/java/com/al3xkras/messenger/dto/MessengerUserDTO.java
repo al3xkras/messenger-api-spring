@@ -27,7 +27,6 @@ public class MessengerUserDTO {
     @NotNull
     @Pattern(regexp = "^(\\+?\\d{1,3} ?\\d{3}-?\\d{2}-?\\d{2})$")
     private String phoneNumber;
-    @NotNull
     @Enumerated(EnumType.STRING)
     private MessengerUserType messengerUserType;
 

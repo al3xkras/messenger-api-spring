@@ -1,16 +1,4 @@
-mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
-cd ./messenger-user-service
-mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
-cd ../ 
-cd ./messenger-chat-service 
-mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
-cd ../
-cd ./messenger-message-service
-mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
-cd ../
 
-
-(or)
 mvn clean install -Dfile.encoding=UTF-8
 cd ./messenger-user-service
 mvn clean install -Dfile.encoding=UTF-8
@@ -20,6 +8,19 @@ mvn clean install -Dfile.encoding=UTF-8
 cd ../
 cd ./messenger-message-service
 mvn clean install -Dfile.encoding=UTF-8
+cd ../
+
+(or)
+
+mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
+cd ./messenger-user-service
+mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
+cd ../ 
+cd ./messenger-chat-service 
+mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
+cd ../
+cd ./messenger-message-service
+mvn clean install -Dfile.encoding=UTF-8 -Dmaven.test.skip
 cd ../
 
 docker stop messenger-user-service

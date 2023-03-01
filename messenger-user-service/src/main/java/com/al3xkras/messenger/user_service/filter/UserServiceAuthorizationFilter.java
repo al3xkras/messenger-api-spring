@@ -31,7 +31,8 @@ public class UserServiceAuthorizationFilter extends OncePerRequestFilter {
         if (requestURI.equals("/user/login") ||
                 (request.getMethod().equalsIgnoreCase("post") && requestURI.equals("/user"))){
             log.warn(String.format(WARNING_FILTER_IGNORED_FOR_REQUEST.value(),
-                    UserServiceAuthorizationFilter.class.getCanonicalName(),request.getRequestURI()));filterChain.doFilter(request, response);
+                    UserServiceAuthorizationFilter.class.getCanonicalName(),request.getRequestURI()));
+            filterChain.doFilter(request, response);
             return;
         }
 
