@@ -37,6 +37,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
 
         String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.info(authHeader);
         if (authHeader==null){
             response.sendError(HttpStatus.FORBIDDEN.value());
             return;
@@ -58,6 +59,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod().toUpperCase());
         String messageForbidden = String.format(EXCEPTION_FORBIDDEN_PATTERN.value(),method,uri);
+        log.info(authorities.toString());
         if (method.equals(HttpMethod.GET)){
             if (uri.equals("/chat") || uri.equals("/chat/users")){
                 boolean readingSelfChatInfo;
@@ -120,6 +122,7 @@ public class ChatServiceAuthorizationFilter extends OncePerRequestFilter {
                 if (!((readingSelfChats && authorities.contains(ChatUserAuthority.READ_SELF_CHATS_INFO)) ||
                         (!readingSelfChats && authorities.contains(ChatUserAuthority.READ_ANY_CHATS_INFO_EXCEPT_SELF)))){
                     response.sendError(HttpStatus.FORBIDDEN.value(),messageForbidden);
+                    log.warn("forbidden");
                     return;
                 }
             }

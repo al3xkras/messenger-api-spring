@@ -7,7 +7,7 @@ import java.util.*;
 import static com.al3xkras.messenger.model.authorities.ChatUserAuthority.*;
 
 public enum ChatUserRole {
-    ANONYMOUS(Collections.singletonList(CREATE_CHAT)),
+    ANONYMOUS(Arrays.asList(CREATE_CHAT,READ_SELF_CHATS_INFO)),
 
     USER(Arrays.asList(ADD_CHAT_USER,READ_SELF_CHATS_INFO,READ_SELF_CHAT_MESSAGES,MODIFY_SELF_INFO,DELETE_SELF,
             VIEW_MESSAGES,SEND_MESSAGES,MODIFY_SELF_CHAT_MESSAGES)),

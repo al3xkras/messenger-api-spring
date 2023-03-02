@@ -13,6 +13,7 @@ import com.al3xkras.messenger.model.security.JwtTokenAuth;
 import com.al3xkras.messenger.model.security.MessengerUserAuthenticationToken;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +30,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.al3xkras.messenger.model.MessengerUtils.Messages.*;
 import static com.al3xkras.messenger.model.security.JwtTokenAuth.Param.*;
@@ -152,7 +155,8 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Authentication authResult) {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                            FilterChain filterChain, Authentication authResult) throws IOException {
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) authResult;
         Algorithm algorithm = JwtTokenAuth.getJwtAuthAlgorithm();
         String subject = token.getChatName()+' '+token.getUsername();
@@ -169,7 +173,14 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
                 .withExpiresAt(new Date(System.currentTimeMillis()+JwtTokenAuth.DEFAULT_REFRESH_TOKEN_EXPIRATION_TIME_MILLIS))
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
-        response.setHeader(HEADER_ACCESS_TOKEN.value(),accessToken);
-        response.setHeader(HEADER_REFRESH_TOKEN.value(),refreshToken);
+
+        Map<String,String> body = new HashMap<>();
+        body.put(HEADER_ACCESS_TOKEN.value(), accessToken);
+        body.put(HEADER_REFRESH_TOKEN.value(),refreshToken);
+        String json = new ObjectMapper().writeValueAsString(body);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().print(json);
+        response.getWriter().flush();
     }
 }
