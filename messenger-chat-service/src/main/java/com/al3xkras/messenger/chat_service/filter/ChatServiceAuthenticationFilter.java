@@ -174,6 +174,9 @@ public class ChatServiceAuthenticationFilter extends AbstractAuthenticationProce
                 .withIssuer(request.getRequestURI())
                 .sign(algorithm);
 
+        response.addHeader(HEADER_ACCESS_TOKEN.value(),accessToken);
+        response.addHeader(HEADER_REFRESH_TOKEN.value(), refreshToken);
+
         Map<String,String> body = new HashMap<>();
         body.put(HEADER_ACCESS_TOKEN.value(), accessToken);
         body.put(HEADER_REFRESH_TOKEN.value(),refreshToken);
