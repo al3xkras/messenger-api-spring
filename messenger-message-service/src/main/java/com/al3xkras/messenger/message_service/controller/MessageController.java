@@ -88,7 +88,14 @@ public class MessageController {
     @GetMapping("/messages")
     public Page<ChatMessage> findAllMessagesByChat(@RequestParam(value = "chat-id",required = false) Long chatId,
                                              @RequestParam(value = "chat-name",required = false) String chatName,
-                                             @RequestBody PageRequestDto pageRequestDto){
+                                             @RequestParam(value = "page",required = false) Integer page,
+                                             @RequestParam(value = "size",required = false) Integer size,
+                                             @RequestBody(required = false) PageRequestDto pageRequestDto){
+        if (pageRequestDto==null){
+            if (page==null || size==null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            pageRequestDto=new PageRequestDto(page,size);
+        }
         ChatUserAuthenticationToken token = (ChatUserAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         Collection<GrantedAuthority> authorities = token.getAuthorities();
 

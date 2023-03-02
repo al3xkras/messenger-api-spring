@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -69,7 +70,14 @@ public class ChatController {
     @GetMapping("/chats")
     public Page<Chat> getChatsByUser(@RequestParam(value = "user-id", required = false) Long messengerUserId,
                                      @RequestParam(value = "username", required = false) String username,
-                                     @RequestBody PageRequestDto pageRequestDto){
+                                     @RequestParam(value = "page", required = false) Integer page,
+                                     @RequestParam(value = "size", required = false) Integer size,
+                                     @RequestBody(required = false) PageRequestDto pageRequestDto){
+        if (pageRequestDto==null){
+            if (page==null || size==null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            pageRequestDto=new PageRequestDto(page,size);
+        }
         Pageable pageable = PageRequest.of(pageRequestDto.getPage(),pageRequestDto.getSize());
         if (messengerUserId!=null){
             return chatService.findAllByMessengerUserId(messengerUserId, pageable);
