@@ -31,6 +31,7 @@ public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {
 
         String prefix = JwtTokenAuth.PREFIX_WITH_WHITESPACE;
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.info("auth header:"+authHeader);
         if (authHeader==null){
             response.sendError(HttpStatus.FORBIDDEN.value());
             return;
@@ -39,6 +40,7 @@ public class MessageServiceAuthorizationFilter extends OncePerRequestFilter {
         ChatUserAuthenticationToken authToken;
         try {
             authToken = JwtTokenAuth.verifyChatUserToken(authHeader.substring(prefix.length()));
+            System.out.println("authorities: "+authToken.getAuthorities());
         } catch (Exception e){
             String message = String.format(Messages.EXCEPTION_AUTH_TOKEN_IS_INVALID.value(), Property.USER_SERVICE_NAME.value());
             log.warn(message+": "+authHeader.substring(prefix.length()),e);
